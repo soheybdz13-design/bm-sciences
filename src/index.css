@@ -1,0 +1,59 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family: Cairo, sans-serif;
+  background:#f5f7fa;
+}
+/* ================= صفحة الإدارة ================= */
+
+.page .card{
+    max-width:700px;
+    margin:auto;
+    background:#fff;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+    height:auto !important;
+    min-height:auto !important;
+    overflow:visible !important;
+
+    display:block !important;
+}
+
+.page .card input,
+.page .card textarea,
+.page .card select{
+    width:100%;
+    padding:12px;
+    margin-bottom:15px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:16px;
+}
+
+.page .card button{
+    width:100%;
+    padding:14px;
+    margin-top:10px;
+    background:#1b5e20;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:17px;
+}
+
+.page .card button:hover{
+    opacity:.9;
+}
+
+.page .card img{
+    margin-top:20px;
+    border-radius:10px;
+    max-width:100%;
+}
