@@ -69,7 +69,7 @@ function App() {
       {/* تسجيل الدخول للإدارة */}
       <Route path="/login" element={<Login />} />
 
-      {/* صفحة إعادة تعيين كلمة السر (بعد الضغط على رابط من البريد) */}
+      {/* صفحة إعادة تعيين كلمة السر (من رابط Supabase) */}
       <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* لوحة الإدارة محمية بالـ session من Supabase */}
