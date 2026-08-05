@@ -22,6 +22,7 @@ function AdminFiles() {
       console.error(error)
       alert('وقع خطأ أثناء جلب الملفات')
     } else {
+      console.log('LESSONS DATA:', data)
       setFiles(data || [])
     }
 
@@ -99,10 +100,11 @@ function AdminFiles() {
       }
 
       // حذف السجل من قاعدة البيانات
-      const { error: deleteError } = await supabase
+      const { data: deletedRows, error: deleteError } = await supabase
         .from('lessons')
         .delete()
         .eq('id', file.id)
+        .select()  // يرجّع السطر المحذوف
 
       if (deleteError) {
         console.error('خطأ في حذف السجل من base:', deleteError)
@@ -110,10 +112,10 @@ function AdminFiles() {
         return
       }
 
+      console.log('Deleted rows from lessons:', deletedRows)
+
       // حدّث قائمة الملفات محليًا باش يختفي السطر مباشرة
-      setFiles(prev =>
-        prev.filter(f => f.id !== file.id)
-      )
+      setFiles(prev => prev.filter(f => f.id !== file.id))
 
       alert('تم حذف الملف بنجاح')
     } catch (err) {
