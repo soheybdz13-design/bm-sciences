@@ -1,12 +1,28 @@
 // src/services/uploadPdf.js
-import { supabase } from '../lib/supabaseClient' // عدّل المسار حسب مكان الملف
+import { supabase } from '../lib/supabaseClient'
 
+// رفع ملف PDF إلى Supabase Storage داخل bucket "pdfs"
 export async function uploadPdf(file) {
-  // نولّد اسم ملف فريد
-  const fileName = `${Date.now()}_${file.name}`
-  const filePath = `lessons/${fileName}` // نخزن داخل مجلد lessons مثلاً
+  // استخراج الامتداد (مثلاً pdf)
+  const fileExt = file.name.split('.').pop()
 
-  // رفع الملف إلى bucket "pdfs"
+  // اسم بدون الامتداد
+  const originalBaseName = file.name.replace(/\.[^/.]+$/, '')
+
+  // تنظيف الاسم: نحذف المسافات والحروف الخاصة
+  const safeBaseName = originalBaseName
+    .replace(/\s+/g, '_')            // المسافات → _
+    .replace(/[^a-zA-Z0-9_\-]/g, '_') // أي حرف غير [a-zA-Z0-9_-] → _
+
+  const timestamp = Date.now()
+
+  // نكون اسم ملف جديد آمن
+  const fileName = `${timestamp}_${safeBaseName}.${fileExt}`
+
+  // نخزن داخل مجلد lessons
+  const filePath = `lessons/${fileName}`
+
+  // رفع الملف إلى bucket "pdfs" (تأكد أن هذا اسم البوكت عندك في Supabase)
   const { data, error } = await supabase.storage
     .from('pdfs')
     .upload(filePath, file)
@@ -17,7 +33,7 @@ export async function uploadPdf(file) {
     throw error
   }
 
-  // جلب رابط عمومي للملف في نفس الـpath
+  // جلب رابط عمومي للملف في نفس الـ path
   const { data: publicData } = supabase.storage
     .from('pdfs')
     .getPublicUrl(filePath)
