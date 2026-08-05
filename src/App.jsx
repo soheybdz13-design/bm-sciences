@@ -16,13 +16,12 @@ import Login from './pages/Login'
 import LevelPage from './pages/LevelPage'
 import Lessons from './pages/Lessons'
 import AllLessons from './pages/AllLessons'
-import ResetPassword from './pages/ResetPassword' // صفحة إعادة تعيين كلمة السر الجديدة
+import ResetPassword from './pages/ResetPassword'
 
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // جلب الـ session من Supabase ومراقبة تغيّرات تسجيل الدخول/الخروج
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
@@ -53,10 +52,10 @@ function App() {
       <Route path="/third" element={<Third />} />
       <Route path="/fourth" element={<Fourth />} />
 
-      {/* صفحة الدروس حسب المستوى (PDF فقط) */}
+      {/* صفحة الدروس حسب المستوى */}
       <Route path="/lessons/:level" element={<Lessons />} />
 
-      {/* صفحة كل الدروس والملفات (LessonCard) */}
+      {/* صفحة كل الدروس والملفات */}
       <Route path="/all-lessons" element={<AllLessons />} />
 
       {/* صفحة الأقسام حسب المستوى والقسم */}

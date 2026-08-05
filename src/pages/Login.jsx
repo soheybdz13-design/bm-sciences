@@ -32,7 +32,7 @@ function Login() {
     navigate("/admin");
   }
 
-  // دالة "نسيت كلمة السر" باستخدام Supabase resetPasswordForEmail
+  // دالة "نسيت كلمة السر" باستخدام Supabase
   async function handleResetPassword() {
     if (!email) {
       alert("من فضلك أدخل البريد الإلكتروني أولاً.");
@@ -43,7 +43,6 @@ function Login() {
     setMessage("");
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      // الرابط الذي يرجعك إليه Supabase بعد الضغط على رابط إعادة التعيين
       redirectTo: "https://bm-sciences.netlify.app/reset-password",
     });
 

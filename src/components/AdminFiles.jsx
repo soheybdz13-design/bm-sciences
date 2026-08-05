@@ -112,7 +112,7 @@ function AdminFiles() {
 
       // حدّث قائمة الملفات محليًا باش يختفي السطر مباشرة
       setFiles(prev =>
-        prev.filter(f => (f.id === undefined ? true : f.id !== file.id))
+        prev.filter(f => f.id !== file.id)
       )
 
       alert('تم حذف الملف بنجاح')
@@ -125,6 +125,21 @@ function AdminFiles() {
   return (
     <div className="card" style={{ marginTop: '40px' }}>
       <h2 style={{ textAlign: 'center' }}>الملفات المرفوعة</h2>
+
+      <button
+        onClick={loadFiles}
+        style={{
+          marginBottom: '15px',
+          background: '#1976d2',
+          color: '#fff',
+          border: 'none',
+          padding: '8px 15px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+        }}
+      >
+        تحديث القائمة
+      </button>
 
       {loading ? (
         <p>جاري التحميل...</p>
