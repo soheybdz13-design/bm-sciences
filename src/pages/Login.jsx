@@ -1,6 +1,7 @@
+// src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabase";
+import { supabase } from "../lib/supabaseClient";
 
 function Login() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ function Login() {
     navigate("/admin");
   }
 
-  // دالة "نسيت كلمة السر"
+  // دالة "نسيت كلمة السر" باستخدام Supabase resetPasswordForEmail
   async function handleResetPassword() {
     if (!email) {
       alert("من فضلك أدخل البريد الإلكتروني أولاً.");
@@ -42,7 +43,7 @@ function Login() {
     setMessage("");
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      // الرابط اللي Supabase يرجعك ليه بعد الضغط على رابط إعادة التعيين
+      // الرابط الذي يرجعك إليه Supabase بعد الضغط على رابط إعادة التعيين
       redirectTo: "https://bm-sciences.netlify.app/reset-password",
     });
 
