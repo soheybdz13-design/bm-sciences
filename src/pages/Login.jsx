@@ -8,6 +8,8 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -27,6 +29,31 @@ function Login() {
     }
 
     navigate("/admin");
+  }
+
+  // دالة "نسيت كلمة السر"
+  async function handleResetPassword() {
+    if (!email) {
+      alert("من فضلك أدخل البريد الإلكتروني أولاً.");
+      return;
+    }
+
+    setResetLoading(true);
+    setMessage("");
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // الرابط اللي Supabase يرجعك ليه بعد الضغط على رابط إعادة التعيين
+      redirectTo: "https://bm-sciences.netlify.app/reset-password",
+    });
+
+    setResetLoading(false);
+
+    if (error) {
+      console.error(error);
+      setMessage("وقع خطأ أثناء إرسال رابط إعادة التعيين: " + error.message);
+    } else {
+      setMessage("تم إرسال رابط إعادة تعيين كلمة السر للبريد الإلكتروني.");
+    }
   }
 
   return (
@@ -62,6 +89,25 @@ function Login() {
         >
           {loading ? "جاري تسجيل الدخول..." : "دخول"}
         </button>
+
+        <br />
+        <br />
+
+        <button
+          type="button"
+          onClick={handleResetPassword}
+          disabled={resetLoading}
+          style={{ backgroundColor: "#eee", color: "#333" }}
+        >
+          {resetLoading ? "جاري إرسال رابط إعادة التعيين..." : "نسيت كلمة السر؟"}
+        </button>
+
+        {message && (
+          <>
+            <br />
+            <p style={{ marginTop: "10px", textAlign: "center" }}>{message}</p>
+          </>
+        )}
       </div>
     </div>
   );
