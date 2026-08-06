@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import AdminFiles from '../components/AdminFiles'
+import AdminUserUploads from '../components/AdminUserUploads'
 import { supabase } from '../lib/supabaseClient'
 
 import { uploadImage } from '../services/uploadImage'
@@ -135,6 +136,7 @@ function Admin() {
       <div className="page">
         <h1>لوحة الإدارة</h1>
 
+        {/* فورم رفع الملفات من طرف الأدمن */}
         <div className="card">
           {/* عنوان الملف */}
           <input
@@ -274,8 +276,12 @@ function Admin() {
             {loading ? 'جاري رفع الملفات...' : 'حفظ الملف'}
           </button>
         </div>
+
+        {/* ملفات الزوار في الانتظار */}
+        <AdminUserUploads />
       </div>
 
+      {/* الملفات المرفوعة النهائية */}
       <AdminFiles />
 
       <Footer />

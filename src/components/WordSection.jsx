@@ -1,72 +1,72 @@
 function WordSection({ lessons }) {
   return (
-    <div className="sections-grid">
-      {lessons.map((lesson) => (
-        <div key={lesson.id} className="card">
-          {lesson.image && (
-            <img
-              src={lesson.image}
-              alt={lesson.title}
-              className="level-image"
-            />
-          )}
-
-          <h2>{lesson.title}</h2>
-
-          {lesson.description && (
-            <p
+    <div style={{ marginTop: '20px' }}>
+      {lessons.map(lesson => (
+        <div
+          key={lesson.id}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 15px',
+            marginBottom: '8px',
+            background: '#222',
+            color: '#fff',
+            borderRadius: '8px',
+          }}
+        >
+          {/* يسار: معلومات الملف */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* أيقونة Word */}
+            <span
               style={{
-                padding: "10px 20px",
-                textAlign: "center",
+                display: 'inline-block',
+                width: '28px',
+                height: '28px',
+                borderRadius: '4px',
+                background: '#0d47a1',
+                textAlign: 'center',
+                lineHeight: '28px',
+                fontWeight: 'bold',
               }}
             >
-              {lesson.description}
-            </p>
-          )}
+              W
+            </span>
 
-          {lesson.subject && (
-            <h4
-              style={{
-                color: "#1b5e20",
-                marginBottom: "15px",
-              }}
-            >
-              {lesson.subject}
-            </h4>
-          )}
+            <div>
+              <div style={{ fontWeight: 'bold' }}>{lesson.title}</div>
+              {lesson.subject && (
+                <div style={{ fontSize: '13px', color: '#ccc' }}>
+                  {lesson.subject}
+                </div>
+              )}
+            </div>
+          </div>
 
+          {/* يمين: أزرار المعاينة والتحميل */}
           {lesson.word && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-                width: "100%",
-                padding: "15px",
-              }}
-            >
+            <div style={{ display: 'flex', gap: '8px' }}>
               <a
                 href={lesson.word}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="lesson-btn"
               >
-                👁️ معاينة Word
+                👁️ معاينة
               </a>
-
               <a
                 href={lesson.word}
                 download
                 className="lesson-btn"
               >
-                ⬇ تحميل Word
+                ⬇ تحميل
               </a>
             </div>
           )}
         </div>
       ))}
     </div>
-  );
+  )
 }
 
-export default WordSection;
+export default WordSection

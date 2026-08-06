@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { supabase } from '../lib/supabaseClient'  // <-- تعديل المسار
+import { supabase } from '../lib/supabaseClient'
 
 import PdfSection from '../components/PdfSection'
 import WordSection from '../components/WordSection'
@@ -50,7 +50,7 @@ function LevelPage() {
         .select('*')
         .eq('level', level)
         .eq('section', section)
-        .order('id', { ascending: false })
+        .order('created_at', { ascending: false }) // ترتيب حسب تاريخ الرفع
 
       if (error) {
         console.error(error)
