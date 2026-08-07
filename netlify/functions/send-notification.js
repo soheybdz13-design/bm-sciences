@@ -1,23 +1,32 @@
-// netlify/functions/send-notification.js
 const { Resend } = require('resend')
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
-exports.handler = async function (event, context) {
+exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Method not allowed' }),
     }
   }
 
   try {
+    if (!process.env.RESEND_API_KEY) {
+      return {
+        statusCode: 500,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error: 'RESEND_API_KEY is missing in Netlify environment variables',
+        }),
+      }
+    }
+
     const body = JSON.parse(event.body || '{}')
     const { type, toEmail, title, reason } = body
 
     if (!toEmail) {
       return {
         statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: 'No recipient email' }),
       }
     }
@@ -43,26 +52,48 @@ exports.handler = async function (event, context) {
     } else {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid type' }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Invalid notification type' }),
       }
     }
 
-    await resend.emails.send({
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
+    const { data, error } = await resend.emails.send({
       from: 'موقع bm-sciences <no-reply@bm-sciences.com>',
-      to: toEmail,
+      to: [toEmail],
       subject,
       text,
     })
 
+    if (error) {
+      console.error('RESEND ERROR:', error)
+
+      return {
+        statusCode: 500,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error: 'Resend rejected the email',
+          details: error.message || error,
+        }),
+      }
+    }
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ ok: true }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ok: true, data }),
     }
   } catch (err) {
-    console.error('EMAIL ERROR:', err)
+    console.error('FUNCTION ERROR:', err)
+
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to send email' }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        error: 'Function failed',
+        details: err.message || String(err),
+      }),
     }
   }
-}
+}s
