@@ -1,4 +1,3 @@
-// src/components/AdminUserUploads.jsx
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
@@ -9,6 +8,8 @@ const sectionLabels = {
   videos: 'فيديوهات',
   tests: 'فروض',
   exams: 'اختبارات',
+  exercises: 'تمارين ووضعيات',
+  summaries: 'ملخصات',
   draw: 'رسومات صماء',
   charts: 'مخططات',
   program: 'المنهاج',
@@ -49,16 +50,16 @@ function AdminUserUploads() {
 
   function getPublicUrl(file_url) {
     if (!file_url) return null
+
     const { data } = supabase.storage
       .from('user-files')
       .getPublicUrl(file_url)
+
     return data?.publicUrl || null
   }
 
-  // دالة إرسال الإشعار للزائر عبر Netlify Function
   async function notifyUser(type, item, reason = '') {
     if (!item.user_email) {
-      // الزائر ما عطاش إيميل، ما نرسل والو
       return
     }
 
@@ -75,7 +76,6 @@ function AdminUserUploads() {
       })
     } catch (err) {
       console.error('NOTIFY ERROR:', err)
-      // نقدر نتجاهل الخطأ أو نعرض رسالة بسيطة
     }
   }
 
@@ -83,6 +83,7 @@ function AdminUserUploads() {
     const ok = window.confirm(
       `هل تريد قبول هذا الملف وإضافته للموقع؟\nالعنوان: "${item.title}"`
     )
+
     if (!ok) return
 
     try {
@@ -97,6 +98,8 @@ function AdminUserUploads() {
         item.section === 'pdf' ||
         item.section === 'tests' ||
         item.section === 'exams' ||
+        item.section === 'exercises' ||
+        item.section === 'summaries' ||
         item.section === 'program' ||
         item.section === 'guide' ||
         item.section === 'support'
@@ -146,10 +149,8 @@ function AdminUserUploads() {
         return
       }
 
-      // إرسال الإشعار بالقبول
       await notifyUser('approved', item)
 
-      // إزالة من القائمة المحلية
       setItems(prev => prev.filter(i => i.id !== item.id))
 
       alert('تم قبول الملف وإضافته للموقع بنجاح')
@@ -163,12 +164,14 @@ function AdminUserUploads() {
     const ok = window.confirm(
       `هل تريد رفض هذا الملف؟\nالعنوان: "${item.title}"`
     )
+
     if (!ok) return
 
     const reason = window.prompt('اكتب سبب الرفض (اختياري):', '')
 
     try {
       const filePath = getStoragePath(item.file_url)
+
       if (filePath) {
         const { error: storageError } = await supabase.storage
           .from('user-files')
@@ -177,7 +180,6 @@ function AdminUserUploads() {
         if (storageError) {
           console.error('ERROR deleting from storage:', storageError)
           alert('وقع خطأ أثناء حذف الملف من التخزين')
-          // نكمل رغم ذلك
         }
       }
 
@@ -195,10 +197,8 @@ function AdminUserUploads() {
         return
       }
 
-      // إرسال الإشعار بالرفض والسبب
       await notifyUser('rejected', item, reason || '')
 
-      // إزالة من القائمة المحلية
       setItems(prev => prev.filter(i => i.id !== item.id))
 
       alert('تم رفض الملف وحفظ سبب الرفض')
@@ -210,7 +210,9 @@ function AdminUserUploads() {
 
   return (
     <div className="card" style={{ marginTop: '40px' }}>
-      <h2 style={{ textAlign: 'center' }}>ملفات الزوار في الانتظار</h2>
+      <h2 style={{ textAlign: 'center' }}>
+        ملفات الزوار في الانتظار
+      </h2>
 
       <button
         onClick={loadPending}
@@ -248,6 +250,7 @@ function AdminUserUploads() {
               <th>العمليات</th>
             </tr>
           </thead>
+
           <tbody>
             {items.map(item => {
               const fileUrl = getPublicUrl(item.file_url)
@@ -257,6 +260,7 @@ function AdminUserUploads() {
                   <td>{item.title}</td>
                   <td>{item.level}</td>
                   <td>{sectionLabels[item.section] || item.section}</td>
+
                   <td>
                     {fileUrl ? (
                       <a
@@ -270,6 +274,7 @@ function AdminUserUploads() {
                       'لا يوجد'
                     )}
                   </td>
+
                   <td>
                     {item.youtube ? (
                       <a
@@ -283,6 +288,7 @@ function AdminUserUploads() {
                       'لا يوجد'
                     )}
                   </td>
+
                   <td>
                     <button
                       style={{
@@ -298,6 +304,7 @@ function AdminUserUploads() {
                     >
                       قبول
                     </button>
+
                     <button
                       style={{
                         background: 'red',

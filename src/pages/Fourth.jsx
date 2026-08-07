@@ -13,11 +13,12 @@ import {
   FaSitemap,
   FaBook,
   FaBookOpen,
-  FaTools
+  FaTools,
+  FaPencilAlt,
+  FaListAlt
 } from "react-icons/fa";
 
 function Fourth() {
-
   const sections = [
     { title: "مذكرات PDF", icon: <FaFilePdf />, path: "/fourth/pdf" },
     { title: "مذكرات Word", icon: <FaFileWord />, path: "/fourth/word" },
@@ -25,11 +26,25 @@ function Fourth() {
     { title: "فيديوهات", icon: <FaVideo />, path: "/fourth/videos" },
     { title: "فروض", icon: <FaClipboard />, path: "/fourth/tests" },
     { title: "اختبارات", icon: <FaClipboardCheck />, path: "/fourth/exams" },
+    {
+      title: "تمارين ووضعيات",
+      icon: <FaPencilAlt />,
+      path: "/fourth/exercises"
+    },
+    {
+      title: "ملخصات",
+      icon: <FaListAlt />,
+      path: "/fourth/summaries"
+    },
     { title: "رسومات صماء", icon: <FaImage />, path: "/fourth/draw" },
     { title: "مخططات", icon: <FaSitemap />, path: "/fourth/charts" },
     { title: "المنهاج", icon: <FaBook />, path: "/fourth/program" },
     { title: "الدليل", icon: <FaBookOpen />, path: "/fourth/guide" },
-    { title: "المعالجة البيداغوجية", icon: <FaTools />, path: "/fourth/support" }
+    {
+      title: "المعالجة البيداغوجية",
+      icon: <FaTools />,
+      path: "/fourth/support"
+    }
   ];
 
   return (
@@ -37,33 +52,25 @@ function Fourth() {
       <Navbar />
 
       <div className="page">
-
         <h1 className="level-title fourth-color">
           الرابعة متوسط
         </h1>
 
         <div className="sections-grid fourth-level">
-
           {sections.map((item, index) => (
-
             <Link
               key={index}
               to={item.path}
               className="section-card"
             >
-
               <div className="section-icon">
                 {item.icon}
               </div>
 
               <h3>{item.title}</h3>
-
             </Link>
-
           ))}
-
         </div>
-
       </div>
 
       <Footer />

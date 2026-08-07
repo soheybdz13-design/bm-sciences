@@ -13,11 +13,12 @@ import {
   FaSitemap,
   FaBook,
   FaBookOpen,
-  FaTools
+  FaTools,
+  FaPencilAlt,
+  FaListAlt
 } from "react-icons/fa";
 
 function First() {
-
   const sections = [
     { title: "مذكرات PDF", icon: <FaFilePdf />, path: "/first/pdf" },
     { title: "مذكرات Word", icon: <FaFileWord />, path: "/first/word" },
@@ -25,11 +26,25 @@ function First() {
     { title: "فيديوهات", icon: <FaVideo />, path: "/first/videos" },
     { title: "فروض", icon: <FaClipboard />, path: "/first/tests" },
     { title: "اختبارات", icon: <FaClipboardCheck />, path: "/first/exams" },
+    {
+      title: "تمارين ووضعيات",
+      icon: <FaPencilAlt />,
+      path: "/first/exercises"
+    },
+    {
+      title: "ملخصات",
+      icon: <FaListAlt />,
+      path: "/first/summaries"
+    },
     { title: "رسومات صماء", icon: <FaImage />, path: "/first/draw" },
     { title: "مخططات", icon: <FaSitemap />, path: "/first/charts" },
     { title: "المنهاج", icon: <FaBook />, path: "/first/program" },
     { title: "الدليل", icon: <FaBookOpen />, path: "/first/guide" },
-    { title: "المعالجة البيداغوجية", icon: <FaTools />, path: "/first/support" }
+    {
+      title: "المعالجة البيداغوجية",
+      icon: <FaTools />,
+      path: "/first/support"
+    }
   ];
 
   return (
@@ -37,15 +52,12 @@ function First() {
       <Navbar />
 
       <div className="page">
-
         <h1 className="level-title first-color">
           الأولى متوسط
         </h1>
 
         <div className="sections-grid first-level">
-
           {sections.map((item, index) => (
-
             <Link
               key={index}
               to={item.path}
@@ -56,13 +68,9 @@ function First() {
               </div>
 
               <h3>{item.title}</h3>
-
             </Link>
-
           ))}
-
         </div>
-
       </div>
 
       <Footer />

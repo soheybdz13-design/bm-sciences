@@ -23,6 +23,8 @@ function LevelPage() {
     videos: 'فيديوهات',
     tests: 'فروض',
     exams: 'اختبارات',
+    exercises: 'تمارين ووضعيات',
+    summaries: 'ملخصات',
     draw: 'رسومات صماء',
     charts: 'مخططات',
     program: 'المنهاج',
@@ -50,7 +52,7 @@ function LevelPage() {
         .select('*')
         .eq('level', level)
         .eq('section', section)
-        .order('created_at', { ascending: false }) // ترتيب حسب تاريخ الرفع
+        .order('created_at', { ascending: false })
 
       if (error) {
         console.error(error)
@@ -89,7 +91,9 @@ function LevelPage() {
       <Navbar />
 
       <div className="page">
-        <h1 className="level-title">{levelNames[level]}</h1>
+        <h1 className="level-title">
+          {levelNames[level]}
+        </h1>
 
         <h2
           style={{
@@ -101,7 +105,9 @@ function LevelPage() {
         </h2>
 
         {loading ? (
-          <h3 style={{ textAlign: 'center' }}>جاري تحميل الملفات...</h3>
+          <h3 style={{ textAlign: 'center' }}>
+            جاري تحميل الملفات...
+          </h3>
         ) : lessons.length === 0 ? (
           <h3 style={{ textAlign: 'center' }}>
             لا توجد ملفات في هذا القسم.

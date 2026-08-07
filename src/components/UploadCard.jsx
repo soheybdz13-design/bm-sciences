@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabaseClient' // عدّل المسار حسب مشروعك
+import { supabase } from '../lib/supabaseClient'
 
 // دالة مساعدة لرفع ملف إلى bucket معيّن
 async function uploadToBucket(bucket, file) {
@@ -44,17 +44,15 @@ export default function UploadCard() {
     setMessage('')
 
     try {
-      // رفع كل ملف في bucket الخاص به
       const pdfUrl = await uploadToBucket('pdfs', pdfFile)
       const videoUrl = await uploadToBucket('videos', videoFile)
       const imageUrl = await uploadToBucket('images', imageFile)
       const wordUrl = await uploadToBucket('words', wordFile)
 
-      // إدخال السجل في lessons
       const { error: insertError } = await supabase
         .from('lessons')
         .insert({
-          title,
+          title: title.trim(),
           level,
           section,
           pdf: pdfUrl,
@@ -70,7 +68,6 @@ export default function UploadCard() {
 
       setMessage('تم رفع الدرس والملفات بنجاح ✅')
 
-      // إعادة تعيين الحقول
       setTitle('')
       setLevel('')
       setSection('')
@@ -91,19 +88,18 @@ export default function UploadCard() {
       <h2 style={{ textAlign: 'center' }}>رفع درس جديد</h2>
 
       <form onSubmit={handleSubmit}>
-        {/* عنوان الدرس */}
         <div style={{ marginBottom: '10px' }}>
           <label>عنوان الدرس</label>
           <input
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
+            placeholder="مثال: تمارين حول التغذية عند الإنسان"
             required
             style={{ width: '100%', padding: '8px' }}
           />
         </div>
 
-        {/* اختيار المستوى */}
         <div style={{ marginBottom: '10px' }}>
           <label>المستوى</label>
           <select
@@ -113,17 +109,15 @@ export default function UploadCard() {
             style={{ width: '100%', padding: '8px' }}
           >
             <option value="">اختر المستوى</option>
-            <option value="ابتدائي">ابتدائي</option>
-            <option value="متوسط">متوسط</option>
-            <option value="ثانوي">ثانوي</option>
-            <option value="جامعي">جامعي</option>
-            {/* زيد مستويات أخرى حسب مشروعك */}
+            <option value="first">الأولى متوسط</option>
+            <option value="second">الثانية متوسط</option>
+            <option value="third">الثالثة متوسط</option>
+            <option value="fourth">الرابعة متوسط</option>
           </select>
         </div>
 
-        {/* اختيار القسم / المكان */}
         <div style={{ marginBottom: '10px' }}>
-          <label>القسم / المكان</label>
+          <label>القسم</label>
           <select
             value={section}
             onChange={e => setSection(e.target.value)}
@@ -131,15 +125,22 @@ export default function UploadCard() {
             style={{ width: '100%', padding: '8px' }}
           >
             <option value="">اختر القسم</option>
-            <option value="رياضيات">رياضيات</option>
-            <option value="لغة عربية">لغة عربية</option>
-            <option value="لغة إنجليزية">لغة إنجليزية</option>
-            <option value="علوم">علوم</option>
-            {/* عدّل حسب المواد اللي عندك */}
+            <option value="pdf">مذكرات PDF</option>
+            <option value="word">مذكرات Word</option>
+            <option value="print">مطبوعات</option>
+            <option value="videos">فيديوهات</option>
+            <option value="tests">فروض</option>
+            <option value="exams">اختبارات</option>
+            <option value="exercises">تمارين ووضعيات</option>
+            <option value="summaries">ملخصات</option>
+            <option value="draw">رسومات صماء</option>
+            <option value="charts">مخططات</option>
+            <option value="program">المنهاج</option>
+            <option value="guide">الدليل</option>
+            <option value="support">المعالجة البيداغوجية</option>
           </select>
         </div>
 
-        {/* تحميل PDF */}
         <div style={{ marginBottom: '10px' }}>
           <label>ملف PDF (اختياري)</label>
           <input
@@ -149,7 +150,6 @@ export default function UploadCard() {
           />
         </div>
 
-        {/* تحميل فيديو */}
         <div style={{ marginBottom: '10px' }}>
           <label>فيديو (اختياري)</label>
           <input
@@ -159,7 +159,6 @@ export default function UploadCard() {
           />
         </div>
 
-        {/* تحميل صورة */}
         <div style={{ marginBottom: '10px' }}>
           <label>صورة (اختياري)</label>
           <input
@@ -169,7 +168,6 @@ export default function UploadCard() {
           />
         </div>
 
-        {/* تحميل Word */}
         <div style={{ marginBottom: '10px' }}>
           <label>ملف Word (اختياري)</label>
           <input

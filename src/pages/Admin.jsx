@@ -1,4 +1,3 @@
-// src/pages/Admin.jsx
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -17,7 +16,7 @@ function Admin() {
   const [title, setTitle] = useState('')
   const [level, setLevel] = useState('')
   const [section, setSection] = useState('')
-  const [youtubeUrl, setYoutubeUrl] = useState('') // رابط YouTube اختياري
+  const [youtubeUrl, setYoutubeUrl] = useState('')
 
   const [imageFile, setImageFile] = useState(null)
   const [pdfFile, setPdfFile] = useState(null)
@@ -38,11 +37,12 @@ function Admin() {
       let word = ''
       let video = ''
 
-      // PDF
       if (
         section === 'pdf' ||
         section === 'tests' ||
         section === 'exams' ||
+        section === 'exercises' ||
+        section === 'summaries' ||
         section === 'program' ||
         section === 'guide' ||
         section === 'support'
@@ -51,20 +51,16 @@ function Admin() {
           alert('اختر ملف PDF')
           return
         }
-        pdf = await uploadPdf(pdfFile)
-      }
 
-      // WORD
-      else if (section === 'word') {
+        pdf = await uploadPdf(pdfFile)
+      } else if (section === 'word') {
         if (!wordFile) {
           alert('اختر ملف Word')
           return
         }
-        word = await uploadWord(wordFile)
-      }
 
-      // IMAGES
-      else if (
+        word = await uploadWord(wordFile)
+      } else if (
         section === 'print' ||
         section === 'draw' ||
         section === 'charts'
@@ -73,30 +69,31 @@ function Admin() {
           alert('اختر صورة')
           return
         }
-        image = await uploadImage(imageFile)
-      }
 
-      // VIDEOS
-      else if (section === 'videos') {
+        image = await uploadImage(imageFile)
+      } else if (section === 'videos') {
         if (!videoFile) {
           alert('اختر فيديو')
           return
         }
+
         video = await uploadVideo(videoFile)
       }
 
-      const { error } = await supabase.from('lessons').insert([
-        {
-          title,
-          level,
-          section,
-          image,
-          pdf,
-          word,
-          video,
-          youtube: youtubeUrl || null,
-        },
-      ])
+      const { error } = await supabase
+        .from('lessons')
+        .insert([
+          {
+            title,
+            level,
+            section,
+            image,
+            pdf,
+            word,
+            video,
+            youtube: youtubeUrl || null,
+          },
+        ])
 
       if (error) {
         alert(error.message)
@@ -109,7 +106,6 @@ function Admin() {
       setLevel('')
       setSection('')
       setYoutubeUrl('')
-
       setImageFile(null)
       setPdfFile(null)
       setWordFile(null)
@@ -136,9 +132,7 @@ function Admin() {
       <div className="page">
         <h1>لوحة الإدارة</h1>
 
-        {/* فورم رفع الملفات من طرف الأدمن */}
         <div className="card">
-          {/* عنوان الملف */}
           <input
             type="text"
             placeholder="عنوان الملف"
@@ -149,7 +143,6 @@ function Admin() {
           <br />
           <br />
 
-          {/* المستوى */}
           <select
             value={level}
             onChange={e => setLevel(e.target.value)}
@@ -164,7 +157,6 @@ function Admin() {
           <br />
           <br />
 
-          {/* القسم */}
           <select
             value={section}
             onChange={e => setSection(e.target.value)}
@@ -176,6 +168,8 @@ function Admin() {
             <option value="videos">فيديوهات</option>
             <option value="tests">فروض</option>
             <option value="exams">اختبارات</option>
+            <option value="exercises">تمارين ووضعيات</option>
+            <option value="summaries">ملخصات</option>
             <option value="draw">رسومات صماء</option>
             <option value="charts">مخططات</option>
             <option value="program">المنهاج</option>
@@ -186,7 +180,6 @@ function Admin() {
           <br />
           <br />
 
-          {/* رابط YouTube اختياري للفيديوهات أو الشروحات */}
           <input
             type="text"
             placeholder="رابط فيديو YouTube (اختياري)"
@@ -197,10 +190,11 @@ function Admin() {
           <br />
           <br />
 
-          {/* ملف PDF */}
           {(section === 'pdf' ||
             section === 'tests' ||
             section === 'exams' ||
+            section === 'exercises' ||
+            section === 'summaries' ||
             section === 'program' ||
             section === 'guide' ||
             section === 'support') && (
@@ -216,7 +210,6 @@ function Admin() {
             </>
           )}
 
-          {/* ملف Word */}
           {section === 'word' && (
             <>
               <label>ملف Word</label>
@@ -230,7 +223,6 @@ function Admin() {
             </>
           )}
 
-          {/* صورة */}
           {(section === 'print' ||
             section === 'draw' ||
             section === 'charts') && (
@@ -246,7 +238,6 @@ function Admin() {
             </>
           )}
 
-          {/* فيديو */}
           {section === 'videos' && (
             <>
               <label>الفيديو (ملف)</label>
@@ -277,11 +268,9 @@ function Admin() {
           </button>
         </div>
 
-        {/* ملفات الزوار في الانتظار */}
         <AdminUserUploads />
       </div>
 
-      {/* الملفات المرفوعة النهائية */}
       <AdminFiles />
 
       <Footer />
