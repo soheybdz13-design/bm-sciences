@@ -1,44 +1,55 @@
-import { Resend } from 'resend'
+const json = (statusCode, body) => ({
+  statusCode,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify(body),
+})
+
+const base64Url = (value) =>
+  Buffer.from(value, 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+
+const mimeHeader = (value) =>
+  `=?UTF-8?B?${Buffer.from(value, 'utf8').toString('base64')}?=`
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        error: 'Method not allowed',
-      }),
-    }
+    return json(405, { error: 'Method not allowed' })
   }
 
   try {
-    if (!process.env.RESEND_API_KEY) {
-      return {
-        statusCode: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          error: 'RESEND_API_KEY is missing',
-        }),
-      }
+    const {
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GOOGLE_REFRESH_TOKEN,
+      GMAIL_SENDER,
+    } = process.env
+
+    if (
+      !GOOGLE_CLIENT_ID ||
+      !GOOGLE_CLIENT_SECRET ||
+      !GOOGLE_REFRESH_TOKEN ||
+      !GMAIL_SENDER
+    ) {
+      return json(500, {
+        error: 'Gmail configuration is missing',
+      })
     }
 
-    const body = JSON.parse(event.body || '{}')
-    const { type, toEmail, title, reason } = body
+    const { type, toEmail, title = '', reason = '' } = JSON.parse(
+      event.body || '{}'
+    )
 
-    if (!toEmail) {
-      return {
-        statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          error: 'No recipient email',
-        }),
-      }
+    if (
+      !toEmail ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail) ||
+      /[\r\n]/.test(toEmail)
+    ) {
+      return json(400, { error: 'Invalid recipient email' })
     }
 
     let subject = ''
@@ -60,63 +71,75 @@ export const handler = async (event) => {
         `\n\nيمكنك تعديل الملف وإرساله مرة أخرى.\n\n` +
         `تحيات فريق bm-sciences.`
     } else {
-      return {
-        statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          error: 'Invalid notification type',
-        }),
-      }
+      return json(400, { error: 'Invalid notification type' })
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY)
-
-    const { data, error } = await resend.emails.send({
-      from: 'موقع bm-sciences <no-reply@bm-sciences.com>',
-      to: [toEmail],
-      subject,
-      text,
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        refresh_token: GOOGLE_REFRESH_TOKEN,
+        grant_type: 'refresh_token',
+      }),
     })
 
-    if (error) {
-      console.error('RESEND ERROR:', error)
+    const tokenData = await tokenResponse.json()
 
-      return {
-        statusCode: 500,
+    if (!tokenResponse.ok || !tokenData.access_token) {
+      console.error('GMAIL TOKEN ERROR:', tokenData)
+      return json(500, {
+        error: 'Could not authenticate with Gmail',
+      })
+    }
+
+    const email = [
+      `From: ${mimeHeader('موقع bm-sciences')} <${GMAIL_SENDER}>`,
+      `To: ${toEmail}`,
+      `Subject: ${mimeHeader(subject)}`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      Buffer.from(text, 'utf8').toString('base64'),
+    ].join('\r\n')
+
+    const sendResponse = await fetch(
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+      {
+        method: 'POST',
         headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          error: 'Resend rejected the email',
-          details: error.message || String(error),
+          raw: base64Url(email),
         }),
       }
+    )
+
+    const data = await sendResponse.json()
+
+    if (!sendResponse.ok) {
+      console.error('GMAIL SEND ERROR:', data)
+      return json(500, {
+        error: 'Gmail rejected the email',
+      })
     }
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ok: true,
-        data,
-      }),
-    }
+    return json(200, {
+      ok: true,
+      data,
+    })
   } catch (err) {
     console.error('FUNCTION ERROR:', err)
 
-    return {
-      statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        error: 'Function failed',
-        details: err.message || String(err),
-      }),
-    }
+    return json(500, {
+      error: 'Function failed',
+      details: err.message || String(err),
+    })
   }
 }
