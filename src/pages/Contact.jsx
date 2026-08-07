@@ -1,47 +1,106 @@
+import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 function Contact() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
 
-return(
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setStatus("");
 
-<>
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      setStatus("يرجى ملء جميع الحقول.");
+      return;
+    }
 
-<Navbar/>
+    try {
+      setLoading(true);
 
-<div className="page">
+      const response = await fetch(
+        "/.netlify/functions/send-notification",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            type: "contact",
+            name: name.trim(),
+            email: email.trim(),
+            message: message.trim(),
+          }),
+        }
+      );
 
-<h1>اتصل بنا</h1>
+      const data = await response.json();
 
-<form className="contact-form">
+      if (!response.ok) {
+        throw new Error(data.error || "تعذر إرسال الرسالة");
+      }
 
-<input
-type="text"
-placeholder="الاسم"/>
+      setStatus("تم إرسال رسالتك بنجاح ✅ شكراً لتواصلك معنا.");
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch (err) {
+      console.error("CONTACT ERROR:", err);
+      setStatus("وقع خطأ أثناء إرسال الرسالة ❌ حاول مرة أخرى.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-<input
-type="email"
-placeholder="البريد الإلكتروني"/>
+  return (
+    <>
+      <Navbar />
 
-<textarea
-placeholder="اكتب رسالتك"></textarea>
+      <div className="page">
+        <h1>اتصل بنا</h1>
 
-<button>
+        <form className="contact-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="الاسم"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
 
-إرسال
+          <input
+            type="email"
+            placeholder="البريد الإلكتروني"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-</button>
+          <textarea
+            placeholder="اكتب رسالتك"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            required
+          />
 
-</form>
+          <button type="submit" disabled={loading}>
+            {loading ? "جاري الإرسال..." : "إرسال"}
+          </button>
 
-</div>
+          {status && (
+            <p style={{ textAlign: "center", marginTop: "15px" }}>
+              {status}
+            </p>
+          )}
+        </form>
+      </div>
 
-<Footer/>
-
-</>
-
-)
-
+      <Footer />
+    </>
+  );
 }
 
 export default Contact;
