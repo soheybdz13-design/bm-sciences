@@ -1,4 +1,3 @@
-// src/components/UserUpload.jsx
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
@@ -7,7 +6,7 @@ function UserUpload() {
   const [level, setLevel] = useState('')
   const [section, setSection] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [email, setEmail] = useState('')   // جديد: بريد الزائر
+  const [email, setEmail] = useState('')
 
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -33,12 +32,11 @@ function UserUpload() {
     try {
       setLoading(true)
 
-      // نرفع الملف إلى bucket user-files بمسار بسيط (بدون حروف عربية)
       const ext = file.name.split('.').pop()
       const filePath = `uploads/${Date.now()}.${ext}`
 
       const { data: storageData, error: storageError } = await supabase.storage
-        .from('user-files') // تأكد أن اسم الباكت هو نفسه في Supabase
+        .from('user-files')
         .upload(filePath, file)
 
       if (storageError) {
@@ -50,7 +48,6 @@ function UserUpload() {
 
       const fileUrl = storageData?.path ? storageData.path : filePath
 
-      // ندخّل السجل في جدول user_uploads مع الإيميل
       const { error } = await supabase
         .from('user_uploads')
         .insert([
@@ -61,7 +58,7 @@ function UserUpload() {
             file_url: fileUrl,
             youtube: youtubeUrl || null,
             status: 'pending',
-            user_email: email, // تخزين الإيميل
+            user_email: email,
           },
         ])
 
@@ -88,10 +85,11 @@ function UserUpload() {
 
   return (
     <div className="card" style={{ marginTop: '30px' }}>
-      <h2 style={{ textAlign: 'center' }}>أرسل ملفك للموقع (للمراجعة)</h2>
+      <h2 style={{ textAlign: 'center' }}>
+        أرسل ملفك للموقع (للمراجعة)
+      </h2>
 
       <form onSubmit={handleSubmit}>
-        {/* عنوان الملف */}
         <input
           type="text"
           placeholder="عنوان الملف"
@@ -100,7 +98,6 @@ function UserUpload() {
           style={{ width: '100%', marginBottom: '15px' }}
         />
 
-        {/* المستوى */}
         <select
           value={level}
           onChange={e => setLevel(e.target.value)}
@@ -113,7 +110,6 @@ function UserUpload() {
           <option value="fourth">الرابعة متوسط</option>
         </select>
 
-        {/* القسم */}
         <select
           value={section}
           onChange={e => setSection(e.target.value)}
@@ -126,6 +122,8 @@ function UserUpload() {
           <option value="videos">فيديوهات</option>
           <option value="tests">فروض</option>
           <option value="exams">اختبارات</option>
+          <option value="exercises">تمارين ووضعيات</option>
+          <option value="summaries">ملخصات</option>
           <option value="draw">رسومات صماء</option>
           <option value="charts">مخططات</option>
           <option value="program">المنهاج</option>
@@ -133,7 +131,6 @@ function UserUpload() {
           <option value="support">المعالجة البيداغوجية</option>
         </select>
 
-        {/* رابط YouTube اختياري */}
         <input
           type="text"
           placeholder="رابط فيديو YouTube (اختياري)"
@@ -142,7 +139,6 @@ function UserUpload() {
           style={{ width: '100%', marginBottom: '15px' }}
         />
 
-        {/* البريد الإلكتروني */}
         <input
           type="email"
           placeholder="بريدك الإلكتروني ليصلك إشعار القبول/الرفض"
@@ -151,10 +147,10 @@ function UserUpload() {
           style={{ width: '100%', marginBottom: '15px' }}
         />
 
-        {/* ملف واحد (PDF أو Word أو صورة أو فيديو) */}
         <label style={{ display: 'block', marginBottom: '5px' }}>
           اختر الملف المناسب (PDF / Word / صورة / فيديو)
         </label>
+
         <input
           type="file"
           accept=".pdf,.doc,.docx,image/*,video/*"
