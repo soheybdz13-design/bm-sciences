@@ -17,6 +17,7 @@ import LevelPage from './pages/LevelPage'
 import Lessons from './pages/Lessons'
 import AllLessons from './pages/AllLessons'
 import ResetPassword from './pages/ResetPassword'
+import "./App.css";
 
 function App() {
   const [session, setSession] = useState(null)
