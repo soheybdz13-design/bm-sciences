@@ -16,6 +16,7 @@ function Admin() {
   const [title, setTitle] = useState('')
   const [level, setLevel] = useState('')
   const [section, setSection] = useState('')
+  const [term, setTerm] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
 
   const [imageFile, setImageFile] = useState(null)
@@ -23,9 +24,29 @@ function Admin() {
   const [wordFile, setWordFile] = useState(null)
   const [videoFile, setVideoFile] = useState(null)
 
+  const needsTerm = section === 'tests' || section === 'exams'
+
+  const needsPdf =
+    section === 'pdf' ||
+    section === 'tests' ||
+    section === 'exams' ||
+    section === 'exercises' ||
+    section === 'summaries' ||
+    section === 'charts' ||
+    section === 'program' ||
+    section === 'guide' ||
+    section === 'support' ||
+    section === 'annual_progression' ||
+    section === 'monthly_distribution'
+
   async function handleUploadAll() {
     if (!title || !level || !section) {
       alert('املأ المعلومات الأساسية')
+      return
+    }
+
+    if (needsTerm && !term) {
+      alert('اختر الفصل')
       return
     }
 
@@ -37,17 +58,7 @@ function Admin() {
       let word = ''
       let video = ''
 
-      if (
-        section === 'pdf' ||
-        section === 'tests' ||
-        section === 'exams' ||
-        section === 'exercises' ||
-        section === 'summaries' ||
-        section === 'charts' ||
-        section === 'program' ||
-        section === 'guide' ||
-        section === 'support'
-      ) {
+      if (needsPdf) {
         if (!pdfFile) {
           alert('اختر ملف PDF')
           return
@@ -87,6 +98,7 @@ function Admin() {
             title,
             level,
             section,
+            term: needsTerm ? term : null,
             image,
             pdf,
             word,
@@ -105,6 +117,7 @@ function Admin() {
       setTitle('')
       setLevel('')
       setSection('')
+      setTerm('')
       setYoutubeUrl('')
       setImageFile(null)
       setPdfFile(null)
@@ -159,7 +172,10 @@ function Admin() {
 
           <select
             value={section}
-            onChange={e => setSection(e.target.value)}
+            onChange={e => {
+              setSection(e.target.value)
+              setTerm('')
+            }}
           >
             <option value="">اختر القسم</option>
             <option value="pdf">مذكرات PDF</option>
@@ -175,10 +191,31 @@ function Admin() {
             <option value="program">المنهاج</option>
             <option value="guide">الدليل</option>
             <option value="support">المعالجة البيداغوجية</option>
+            <option value="annual_progression">التدرج السنوي</option>
+            <option value="monthly_distribution">التوزيع الشهري</option>
           </select>
 
           <br />
           <br />
+
+          {needsTerm && (
+            <>
+              <label>اختر الفصل</label>
+
+              <select
+                value={term}
+                onChange={e => setTerm(e.target.value)}
+              >
+                <option value="">اختر الفصل</option>
+                <option value="term1">الفصل الأول</option>
+                <option value="term2">الفصل الثاني</option>
+                <option value="term3">الفصل الثالث</option>
+              </select>
+
+              <br />
+              <br />
+            </>
+          )}
 
           <input
             type="text"
@@ -190,15 +227,7 @@ function Admin() {
           <br />
           <br />
 
-          {(section === 'pdf' ||
-            section === 'tests' ||
-            section === 'exams' ||
-            section === 'exercises' ||
-            section === 'summaries' ||
-            section === 'charts' ||
-            section === 'program' ||
-            section === 'guide' ||
-            section === 'support') && (
+          {needsPdf && (
             <>
               <label>
                 {section === 'charts'
@@ -232,8 +261,7 @@ function Admin() {
             </>
           )}
 
-          {(section === 'print' ||
-            section === 'draw') && (
+          {(section === 'print' || section === 'draw') && (
             <>
               <label>الصورة</label>
 

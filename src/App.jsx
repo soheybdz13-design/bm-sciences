@@ -60,6 +60,7 @@ function App() {
       <Route path="/all-lessons" element={<AllLessons />} />
 
       {/* صفحة الأقسام حسب المستوى والقسم */}
+      <Route path="/:level/:section/:term" element={<LevelPage />} />
       <Route path="/:level/:section" element={<LevelPage />} />
 
       {/* الصفحات الأخرى */}

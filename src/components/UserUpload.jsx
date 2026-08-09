@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
-const WORKER_URL = 'https://bm-sciences-upload.soheybdz13.workers.dev'
+const WORKER_URL =
+  'https://bm-sciences-upload.soheybdz13.workers.dev'
+
 const TURNSTILE_SITE_KEY = '0x4AAAAAAEKSC4sa6IMYEu-1'
 
 function UserUpload() {
   const [title, setTitle] = useState('')
   const [level, setLevel] = useState('')
   const [section, setSection] = useState('')
+  const [term, setTerm] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [email, setEmail] = useState('')
   const [file, setFile] = useState(null)
@@ -16,6 +19,8 @@ function UserUpload() {
 
   const turnstileRef = useRef(null)
   const widgetId = useRef(null)
+
+  const needsTerm = section === 'tests' || section === 'exams'
 
   useEffect(() => {
     function renderTurnstile() {
@@ -42,15 +47,21 @@ function UserUpload() {
     if (existingScript) {
       existingScript.addEventListener('load', renderTurnstile)
       renderTurnstile()
-      return () => existingScript.removeEventListener('load', renderTurnstile)
+
+      return () => {
+        existingScript.removeEventListener('load', renderTurnstile)
+      }
     }
 
     const script = document.createElement('script')
+
     script.src =
       'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+
     script.async = true
     script.defer = true
     script.onload = renderTurnstile
+
     document.head.appendChild(script)
   }, [])
 
@@ -59,6 +70,11 @@ function UserUpload() {
 
     if (!title || !level || !section) {
       alert('املأ المعلومات الأساسية: العنوان، المستوى، والقسم')
+      return
+    }
+
+    if (needsTerm && !term) {
+      alert('اختر الفصل')
       return
     }
 
@@ -84,7 +100,7 @@ function UserUpload() {
         method: 'POST',
         headers: {
           'Content-Type': file.type || 'application/octet-stream',
-          'X-File-Name': file.name,
+          'X-File-Name': encodeURIComponent(file.name),
           'X-Turnstile-Token': turnstileToken,
         },
         body: file,
@@ -93,7 +109,9 @@ function UserUpload() {
       const uploadResult = await uploadResponse.json()
 
       if (!uploadResponse.ok) {
-        throw new Error(uploadResult.error || 'وقع خطأ أثناء رفع الملف')
+        throw new Error(
+          uploadResult.error || 'وقع خطأ أثناء رفع الملف'
+        )
       }
 
       const { error } = await supabase
@@ -103,6 +121,7 @@ function UserUpload() {
             title,
             level,
             section,
+            term: needsTerm ? term : null,
             file_url: uploadResult.key,
             youtube: youtubeUrl || null,
             status: 'pending',
@@ -121,6 +140,7 @@ function UserUpload() {
       setTitle('')
       setLevel('')
       setSection('')
+      setTerm('')
       setYoutubeUrl('')
       setEmail('')
       setFile(null)
@@ -166,7 +186,10 @@ function UserUpload() {
 
         <select
           value={section}
-          onChange={e => setSection(e.target.value)}
+          onChange={e => {
+            setSection(e.target.value)
+            setTerm('')
+          }}
           style={{ width: '100%', marginBottom: '15px' }}
         >
           <option value="">اختر القسم</option>
@@ -183,7 +206,22 @@ function UserUpload() {
           <option value="program">المنهاج</option>
           <option value="guide">الدليل</option>
           <option value="support">المعالجة البيداغوجية</option>
+          <option value="annual_progression">التدرج السنوي</option>
+          <option value="monthly_distribution">التوزيع الشهري</option>
         </select>
+
+        {needsTerm && (
+          <select
+            value={term}
+            onChange={e => setTerm(e.target.value)}
+            style={{ width: '100%', marginBottom: '15px' }}
+          >
+            <option value="">اختر الفصل</option>
+            <option value="term1">الفصل الأول</option>
+            <option value="term2">الفصل الثاني</option>
+            <option value="term3">الفصل الثالث</option>
+          </select>
+        )}
 
         <input
           type="text"

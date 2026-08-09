@@ -1,6 +1,6 @@
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import { Link } from "react-router-dom";
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import { Link } from 'react-router-dom'
 
 import {
   FaFilePdf,
@@ -15,37 +15,47 @@ import {
   FaBookOpen,
   FaTools,
   FaPencilAlt,
-  FaListAlt
-} from "react-icons/fa";
+  FaListAlt,
+} from 'react-icons/fa'
 
 function Fourth() {
   const sections = [
-    { title: "مذكرات PDF", icon: <FaFilePdf />, path: "/fourth/pdf" },
-    { title: "مذكرات Word", icon: <FaFileWord />, path: "/fourth/word" },
-    { title: "مطبوعات", icon: <FaPrint />, path: "/fourth/print" },
-    { title: "فيديوهات", icon: <FaVideo />, path: "/fourth/videos" },
-    { title: "فروض", icon: <FaClipboard />, path: "/fourth/tests" },
-    { title: "اختبارات", icon: <FaClipboardCheck />, path: "/fourth/exams" },
+    { title: 'مذكرات PDF', icon: <FaFilePdf />, path: '/fourth/pdf' },
+    { title: 'مذكرات Word', icon: <FaFileWord />, path: '/fourth/word' },
+    { title: 'مطبوعات', icon: <FaPrint />, path: '/fourth/print' },
+    { title: 'فيديوهات', icon: <FaVideo />, path: '/fourth/videos' },
+    { title: 'فروض', icon: <FaClipboard />, path: '/fourth/tests' },
+    { title: 'اختبارات', icon: <FaClipboardCheck />, path: '/fourth/exams' },
     {
-      title: "تمارين ووضعيات",
+      title: 'تمارين ووضعيات',
       icon: <FaPencilAlt />,
-      path: "/fourth/exercises"
+      path: '/fourth/exercises',
     },
     {
-      title: "ملخصات",
+      title: 'ملخصات',
       icon: <FaListAlt />,
-      path: "/fourth/summaries"
+      path: '/fourth/summaries',
     },
-    { title: "رسومات صماء", icon: <FaImage />, path: "/fourth/draw" },
-    { title: "مخططات", icon: <FaSitemap />, path: "/fourth/charts" },
-    { title: "المنهاج", icon: <FaBook />, path: "/fourth/program" },
-    { title: "الدليل", icon: <FaBookOpen />, path: "/fourth/guide" },
+    { title: 'رسومات صماء', icon: <FaImage />, path: '/fourth/draw' },
+    { title: 'مخططات', icon: <FaSitemap />, path: '/fourth/charts' },
+    { title: 'المنهاج', icon: <FaBook />, path: '/fourth/program' },
+    { title: 'الدليل', icon: <FaBookOpen />, path: '/fourth/guide' },
     {
-      title: "المعالجة البيداغوجية",
+      title: 'المعالجة البيداغوجية',
       icon: <FaTools />,
-      path: "/fourth/support"
-    }
-  ];
+      path: '/fourth/support',
+    },
+    {
+      title: 'التدرج السنوي',
+      icon: <FaBook />,
+      path: '/fourth/annual_progression',
+    },
+    {
+      title: 'التوزيع الشهري',
+      icon: <FaListAlt />,
+      path: '/fourth/monthly_distribution',
+    },
+  ]
 
   return (
     <>
@@ -75,7 +85,7 @@ function Fourth() {
 
       <Footer />
     </>
-  );
+  )
 }
 
-export default Fourth;
+export default Fourth

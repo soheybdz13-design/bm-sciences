@@ -1,6 +1,5 @@
-// src/pages/LevelPage.jsx
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { supabase } from '../lib/supabaseClient'
@@ -11,7 +10,7 @@ import VideoSection from '../components/VideoSection'
 import ImageSection from '../components/ImageSection'
 
 function LevelPage() {
-  const { level, section } = useParams()
+  const { level, section, term } = useParams()
 
   const [lessons, setLessons] = useState([])
   const [loading, setLoading] = useState(true)
@@ -30,6 +29,8 @@ function LevelPage() {
     program: 'المنهاج',
     guide: 'الدليل',
     support: 'المعالجة البيداغوجية',
+    annual_progression: 'التدرج السنوي',
+    monthly_distribution: 'التوزيع الشهري',
   }
 
   const levelNames = {
@@ -39,20 +40,40 @@ function LevelPage() {
     fourth: 'الرابعة متوسط',
   }
 
+  const termNames = {
+    term1: 'الفصل الأول',
+    term2: 'الفصل الثاني',
+    term3: 'الفصل الثالث',
+  }
+
+  const hasTerms = section === 'tests' || section === 'exams'
+
   useEffect(() => {
+    if (hasTerms && !term) {
+      setLessons([])
+      setLoading(false)
+      return
+    }
+
     loadLessons()
-  }, [level, section])
+  }, [level, section, term])
 
   async function loadLessons() {
     try {
       setLoading(true)
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('lessons')
         .select('*')
         .eq('level', level)
         .eq('section', section)
         .order('created_at', { ascending: false })
+
+      if (term) {
+        query = query.eq('term', term)
+      }
+
+      const { data, error } = await query
 
       if (error) {
         console.error(error)
@@ -78,12 +99,40 @@ function LevelPage() {
 
       case 'print':
       case 'draw':
-      case 'charts':
         return <ImageSection lessons={lessons} />
 
       default:
         return <PdfSection lessons={lessons} />
     }
+  }
+
+  function renderTerms() {
+    const prefix = section === 'tests' ? 'فروض' : 'اختبارات'
+
+    return (
+      <div className="sections-grid">
+        <Link
+          to={`/${level}/${section}/term1`}
+          className="section-card"
+        >
+          <h3>{prefix} الفصل الأول</h3>
+        </Link>
+
+        <Link
+          to={`/${level}/${section}/term2`}
+          className="section-card"
+        >
+          <h3>{prefix} الفصل الثاني</h3>
+        </Link>
+
+        <Link
+          to={`/${level}/${section}/term3`}
+          className="section-card"
+        >
+          <h3>{prefix} الفصل الثالث</h3>
+        </Link>
+      </div>
+    )
   }
 
   return (
@@ -102,9 +151,12 @@ function LevelPage() {
           }}
         >
           {names[section]}
+          {term ? ` - ${termNames[term]}` : ''}
         </h2>
 
-        {loading ? (
+        {hasTerms && !term ? (
+          renderTerms()
+        ) : loading ? (
           <h3 style={{ textAlign: 'center' }}>
             جاري تحميل الملفات...
           </h3>

@@ -1,6 +1,6 @@
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import { Link } from "react-router-dom";
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import { Link } from 'react-router-dom'
 
 import {
   FaFilePdf,
@@ -15,37 +15,47 @@ import {
   FaBookOpen,
   FaTools,
   FaPencilAlt,
-  FaListAlt
-} from "react-icons/fa";
+  FaListAlt,
+} from 'react-icons/fa'
 
 function Third() {
   const sections = [
-    { title: "مذكرات PDF", icon: <FaFilePdf />, path: "/third/pdf" },
-    { title: "مذكرات Word", icon: <FaFileWord />, path: "/third/word" },
-    { title: "مطبوعات", icon: <FaPrint />, path: "/third/print" },
-    { title: "فيديوهات", icon: <FaVideo />, path: "/third/videos" },
-    { title: "فروض", icon: <FaClipboard />, path: "/third/tests" },
-    { title: "اختبارات", icon: <FaClipboardCheck />, path: "/third/exams" },
+    { title: 'مذكرات PDF', icon: <FaFilePdf />, path: '/third/pdf' },
+    { title: 'مذكرات Word', icon: <FaFileWord />, path: '/third/word' },
+    { title: 'مطبوعات', icon: <FaPrint />, path: '/third/print' },
+    { title: 'فيديوهات', icon: <FaVideo />, path: '/third/videos' },
+    { title: 'فروض', icon: <FaClipboard />, path: '/third/tests' },
+    { title: 'اختبارات', icon: <FaClipboardCheck />, path: '/third/exams' },
     {
-      title: "تمارين ووضعيات",
+      title: 'تمارين ووضعيات',
       icon: <FaPencilAlt />,
-      path: "/third/exercises"
+      path: '/third/exercises',
     },
     {
-      title: "ملخصات",
+      title: 'ملخصات',
       icon: <FaListAlt />,
-      path: "/third/summaries"
+      path: '/third/summaries',
     },
-    { title: "رسومات صماء", icon: <FaImage />, path: "/third/draw" },
-    { title: "مخططات", icon: <FaSitemap />, path: "/third/charts" },
-    { title: "المنهاج", icon: <FaBook />, path: "/third/program" },
-    { title: "الدليل", icon: <FaBookOpen />, path: "/third/guide" },
+    { title: 'رسومات صماء', icon: <FaImage />, path: '/third/draw' },
+    { title: 'مخططات', icon: <FaSitemap />, path: '/third/charts' },
+    { title: 'المنهاج', icon: <FaBook />, path: '/third/program' },
+    { title: 'الدليل', icon: <FaBookOpen />, path: '/third/guide' },
     {
-      title: "المعالجة البيداغوجية",
+      title: 'المعالجة البيداغوجية',
       icon: <FaTools />,
-      path: "/third/support"
-    }
-  ];
+      path: '/third/support',
+    },
+    {
+      title: 'التدرج السنوي',
+      icon: <FaBook />,
+      path: '/third/annual_progression',
+    },
+    {
+      title: 'التوزيع الشهري',
+      icon: <FaListAlt />,
+      path: '/third/monthly_distribution',
+    },
+  ]
 
   return (
     <>
@@ -75,7 +85,7 @@ function Third() {
 
       <Footer />
     </>
-  );
+  )
 }
 
-export default Third;
+export default Third

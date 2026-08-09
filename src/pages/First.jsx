@@ -1,6 +1,6 @@
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import { Link } from "react-router-dom";
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import { Link } from 'react-router-dom'
 
 import {
   FaFilePdf,
@@ -15,37 +15,47 @@ import {
   FaBookOpen,
   FaTools,
   FaPencilAlt,
-  FaListAlt
-} from "react-icons/fa";
+  FaListAlt,
+} from 'react-icons/fa'
 
 function First() {
   const sections = [
-    { title: "مذكرات PDF", icon: <FaFilePdf />, path: "/first/pdf" },
-    { title: "مذكرات Word", icon: <FaFileWord />, path: "/first/word" },
-    { title: "مطبوعات", icon: <FaPrint />, path: "/first/print" },
-    { title: "فيديوهات", icon: <FaVideo />, path: "/first/videos" },
-    { title: "فروض", icon: <FaClipboard />, path: "/first/tests" },
-    { title: "اختبارات", icon: <FaClipboardCheck />, path: "/first/exams" },
+    { title: 'مذكرات PDF', icon: <FaFilePdf />, path: '/first/pdf' },
+    { title: 'مذكرات Word', icon: <FaFileWord />, path: '/first/word' },
+    { title: 'مطبوعات', icon: <FaPrint />, path: '/first/print' },
+    { title: 'فيديوهات', icon: <FaVideo />, path: '/first/videos' },
+    { title: 'فروض', icon: <FaClipboard />, path: '/first/tests' },
+    { title: 'اختبارات', icon: <FaClipboardCheck />, path: '/first/exams' },
     {
-      title: "تمارين ووضعيات",
+      title: 'تمارين ووضعيات',
       icon: <FaPencilAlt />,
-      path: "/first/exercises"
+      path: '/first/exercises',
     },
     {
-      title: "ملخصات",
+      title: 'ملخصات',
       icon: <FaListAlt />,
-      path: "/first/summaries"
+      path: '/first/summaries',
     },
-    { title: "رسومات صماء", icon: <FaImage />, path: "/first/draw" },
-    { title: "مخططات", icon: <FaSitemap />, path: "/first/charts" },
-    { title: "المنهاج", icon: <FaBook />, path: "/first/program" },
-    { title: "الدليل", icon: <FaBookOpen />, path: "/first/guide" },
+    { title: 'رسومات صماء', icon: <FaImage />, path: '/first/draw' },
+    { title: 'مخططات', icon: <FaSitemap />, path: '/first/charts' },
+    { title: 'المنهاج', icon: <FaBook />, path: '/first/program' },
+    { title: 'الدليل', icon: <FaBookOpen />, path: '/first/guide' },
     {
-      title: "المعالجة البيداغوجية",
+      title: 'المعالجة البيداغوجية',
       icon: <FaTools />,
-      path: "/first/support"
-    }
-  ];
+      path: '/first/support',
+    },
+    {
+      title: 'التدرج السنوي',
+      icon: <FaBook />,
+      path: '/first/annual_progression',
+    },
+    {
+      title: 'التوزيع الشهري',
+      icon: <FaListAlt />,
+      path: '/first/monthly_distribution',
+    },
+  ]
 
   return (
     <>
@@ -75,7 +85,7 @@ function First() {
 
       <Footer />
     </>
-  );
+  )
 }
 
-export default First;
+export default First

@@ -135,6 +135,7 @@ function AdminUserUploads() {
             title: item.title,
             level: item.level,
             section: item.section,
+            term: item.term || null,
             image,
             pdf,
             word,
