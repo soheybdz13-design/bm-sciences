@@ -43,6 +43,7 @@ function Admin() {
         section === 'exams' ||
         section === 'exercises' ||
         section === 'summaries' ||
+        section === 'charts' ||
         section === 'program' ||
         section === 'guide' ||
         section === 'support'
@@ -62,8 +63,7 @@ function Admin() {
         word = await uploadWord(wordFile)
       } else if (
         section === 'print' ||
-        section === 'draw' ||
-        section === 'charts'
+        section === 'draw'
       ) {
         if (!imageFile) {
           alert('اختر صورة')
@@ -195,16 +195,23 @@ function Admin() {
             section === 'exams' ||
             section === 'exercises' ||
             section === 'summaries' ||
+            section === 'charts' ||
             section === 'program' ||
             section === 'guide' ||
             section === 'support') && (
             <>
-              <label>ملف PDF</label>
+              <label>
+                {section === 'charts'
+                  ? 'ملف PDF للمخطط'
+                  : 'ملف PDF'}
+              </label>
+
               <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,application/pdf"
                 onChange={e => setPdfFile(e.target.files[0])}
               />
+
               <br />
               <br />
             </>
@@ -213,26 +220,29 @@ function Admin() {
           {section === 'word' && (
             <>
               <label>ملف Word</label>
+
               <input
                 type="file"
                 accept=".doc,.docx"
                 onChange={e => setWordFile(e.target.files[0])}
               />
+
               <br />
               <br />
             </>
           )}
 
           {(section === 'print' ||
-            section === 'draw' ||
-            section === 'charts') && (
+            section === 'draw') && (
             <>
               <label>الصورة</label>
+
               <input
                 type="file"
                 accept="image/*"
                 onChange={e => setImageFile(e.target.files[0])}
               />
+
               <br />
               <br />
             </>
@@ -241,11 +251,13 @@ function Admin() {
           {section === 'videos' && (
             <>
               <label>الفيديو (ملف)</label>
+
               <input
                 type="file"
                 accept="video/*"
                 onChange={e => setVideoFile(e.target.files[0])}
               />
+
               <br />
               <br />
             </>

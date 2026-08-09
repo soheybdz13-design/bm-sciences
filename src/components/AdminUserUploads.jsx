@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
+const R2_WORKER_URL =
+  'https://bm-sciences-upload.soheybdz13.workers.dev'
+
 const sectionLabels = {
   pdf: 'مذكرات PDF',
   word: 'مذكرات Word',
@@ -44,16 +47,24 @@ function AdminUserUploads() {
     setLoading(false)
   }
 
-  function getStoragePath(file_url) {
-    return file_url || null
+  function getStoragePath(fileUrl) {
+    return fileUrl || null
   }
 
-  function getPublicUrl(file_url) {
-    if (!file_url) return null
+  function isR2File(fileUrl) {
+    return /^uploads\/\d+-[a-f0-9-]{36}\./i.test(fileUrl || '')
+  }
+
+  function getPublicUrl(fileUrl) {
+    if (!fileUrl) return null
+
+    if (isR2File(fileUrl)) {
+      return `${R2_WORKER_URL}/files/${fileUrl}`
+    }
 
     const { data } = supabase.storage
       .from('user-files')
-      .getPublicUrl(file_url)
+      .getPublicUrl(fileUrl)
 
     return data?.publicUrl || null
   }
@@ -172,14 +183,13 @@ function AdminUserUploads() {
     try {
       const filePath = getStoragePath(item.file_url)
 
-      if (filePath) {
+      if (filePath && !isR2File(filePath)) {
         const { error: storageError } = await supabase.storage
           .from('user-files')
           .remove([filePath])
 
         if (storageError) {
-          console.error('ERROR deleting from storage:', storageError)
-          alert('وقع خطأ أثناء حذف الملف من التخزين')
+          console.error('ERROR deleting old Supabase file:', storageError)
         }
       }
 
@@ -259,7 +269,9 @@ function AdminUserUploads() {
                 <tr key={item.id}>
                   <td>{item.title}</td>
                   <td>{item.level}</td>
-                  <td>{sectionLabels[item.section] || item.section}</td>
+                  <td>
+                    {sectionLabels[item.section] || item.section}
+                  </td>
 
                   <td>
                     {fileUrl ? (

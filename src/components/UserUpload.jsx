@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+
+const WORKER_URL = 'https://bm-sciences-upload.soheybdz13.workers.dev'
+const TURNSTILE_SITE_KEY = '0x4AAAAAAEKSC4sa6IMYEu-1'
 
 function UserUpload() {
   const [title, setTitle] = useState('')
@@ -7,20 +10,60 @@ function UserUpload() {
   const [section, setSection] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [email, setEmail] = useState('')
-
   const [file, setFile] = useState(null)
+  const [turnstileToken, setTurnstileToken] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const turnstileRef = useRef(null)
+  const widgetId = useRef(null)
+
+  useEffect(() => {
+    function renderTurnstile() {
+      if (
+        !window.turnstile ||
+        !turnstileRef.current ||
+        widgetId.current !== null
+      ) {
+        return
+      }
+
+      widgetId.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: token => setTurnstileToken(token),
+        'expired-callback': () => setTurnstileToken(''),
+        'error-callback': () => setTurnstileToken(''),
+      })
+    }
+
+    const existingScript = document.querySelector(
+      'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"]'
+    )
+
+    if (existingScript) {
+      existingScript.addEventListener('load', renderTurnstile)
+      renderTurnstile()
+      return () => existingScript.removeEventListener('load', renderTurnstile)
+    }
+
+    const script = document.createElement('script')
+    script.src =
+      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    script.async = true
+    script.defer = true
+    script.onload = renderTurnstile
+    document.head.appendChild(script)
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
 
     if (!title || !level || !section) {
-      alert('املأ المعلومات الأساسية (العنوان، المستوى، القسم)')
+      alert('املأ المعلومات الأساسية: العنوان، المستوى، والقسم')
       return
     }
 
     if (!email) {
-      alert('أدخل بريدك الإلكتروني ليصلك إشعار القبول/الرفض')
+      alert('أدخل بريدك الإلكتروني ليصلك إشعار القبول أو الرفض')
       return
     }
 
@@ -29,24 +72,29 @@ function UserUpload() {
       return
     }
 
+    if (!turnstileToken) {
+      alert('أكمل التحقق الأمني ثم أعد المحاولة')
+      return
+    }
+
     try {
       setLoading(true)
 
-      const ext = file.name.split('.').pop()
-      const filePath = `uploads/${Date.now()}.${ext}`
+      const uploadResponse = await fetch(`${WORKER_URL}/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+          'X-File-Name': file.name,
+          'X-Turnstile-Token': turnstileToken,
+        },
+        body: file,
+      })
 
-      const { data: storageData, error: storageError } = await supabase.storage
-        .from('user-files')
-        .upload(filePath, file)
+      const uploadResult = await uploadResponse.json()
 
-      if (storageError) {
-        console.error('STORAGE ERROR:', storageError)
-        alert('وقع خطأ أثناء رفع الملف')
-        setLoading(false)
-        return
+      if (!uploadResponse.ok) {
+        throw new Error(uploadResult.error || 'وقع خطأ أثناء رفع الملف')
       }
-
-      const fileUrl = storageData?.path ? storageData.path : filePath
 
       const { error } = await supabase
         .from('user_uploads')
@@ -55,7 +103,7 @@ function UserUpload() {
             title,
             level,
             section,
-            file_url: fileUrl,
+            file_url: uploadResult.key,
             youtube: youtubeUrl || null,
             status: 'pending',
             user_email: email,
@@ -64,20 +112,26 @@ function UserUpload() {
 
       if (error) {
         console.error(error)
-        alert('وقع خطأ أثناء حفظ بيانات الملف')
-      } else {
-        alert('تم إرسال ملفك للمراجعة، شكراً لك!')
+        alert('تم رفع الملف لكن وقع خطأ أثناء حفظ بياناته')
+        return
+      }
 
-        setTitle('')
-        setLevel('')
-        setSection('')
-        setYoutubeUrl('')
-        setEmail('')
-        setFile(null)
+      alert('تم إرسال ملفك للمراجعة، شكراً لك!')
+
+      setTitle('')
+      setLevel('')
+      setSection('')
+      setYoutubeUrl('')
+      setEmail('')
+      setFile(null)
+      setTurnstileToken('')
+
+      if (window.turnstile && widgetId.current !== null) {
+        window.turnstile.reset(widgetId.current)
       }
     } catch (err) {
       console.error(err)
-      alert('وقع خطأ غير متوقع')
+      alert(err.message || 'وقع خطأ غير متوقع')
     } finally {
       setLoading(false)
     }
@@ -86,7 +140,7 @@ function UserUpload() {
   return (
     <div className="card" style={{ marginTop: '30px' }}>
       <h2 style={{ textAlign: 'center' }}>
-        أرسل ملفك للموقع (للمراجعة)
+        أرسل ملفك للموقع للمراجعة
       </h2>
 
       <form onSubmit={handleSubmit}>
@@ -141,20 +195,25 @@ function UserUpload() {
 
         <input
           type="email"
-          placeholder="بريدك الإلكتروني ليصلك إشعار القبول/الرفض"
+          placeholder="بريدك الإلكتروني ليصلك إشعار القبول أو الرفض"
           value={email}
           onChange={e => setEmail(e.target.value)}
           style={{ width: '100%', marginBottom: '15px' }}
         />
 
         <label style={{ display: 'block', marginBottom: '5px' }}>
-          اختر الملف المناسب (PDF / Word / صورة / فيديو)
+          اختر الملف المناسب: PDF أو Word أو صورة أو فيديو
         </label>
 
         <input
           type="file"
           accept=".pdf,.doc,.docx,image/*,video/*"
           onChange={e => setFile(e.target.files[0] || null)}
+          style={{ marginBottom: '20px' }}
+        />
+
+        <div
+          ref={turnstileRef}
           style={{ marginBottom: '20px' }}
         />
 
@@ -167,7 +226,7 @@ function UserUpload() {
             padding: '12px 25px',
             border: 'none',
             borderRadius: '8px',
-            cursor: 'pointer',
+            cursor: loading ? 'not-allowed' : 'pointer',
             fontSize: '18px',
           }}
         >
