@@ -69,7 +69,7 @@ function LevelPage() {
         .select('*')
         .eq('level', level)
         .eq('section', section)
-        .order('created_at', { ascending: false })
+        .order('title', { ascending: true })
 
       if (term) {
         query = query.eq('term', term)
