@@ -17,6 +17,7 @@ import {
   FaPencilAlt,
   FaListAlt,
 } from 'react-icons/fa'
+import { FaFilePowerpoint } from 'react-icons/fa'
 
 function First() {
   const sections = [
@@ -24,6 +25,7 @@ function First() {
     { title: 'مذكرات Word', icon: <FaFileWord />, path: '/first/word' },
     { title: 'مطبوعات', icon: <FaPrint />, path: '/first/print' },
     { title: 'فيديوهات', icon: <FaVideo />, path: '/first/videos' },
+    { title: 'عروض PPT', icon: <FaFilePowerpoint />, path: '/first/ppt' },
     { title: 'فروض', icon: <FaClipboard />, path: '/first/tests' },
     { title: 'اختبارات', icon: <FaClipboardCheck />, path: '/first/exams' },
     {

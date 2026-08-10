@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import {
   FaFilePdf,
   FaFileWord,
+  FaFilePowerpoint,
   FaPrint,
   FaVideo,
   FaClipboard,
@@ -24,8 +25,17 @@ function Second() {
     { title: 'مذكرات Word', icon: <FaFileWord />, path: '/second/word' },
     { title: 'مطبوعات', icon: <FaPrint />, path: '/second/print' },
     { title: 'فيديوهات', icon: <FaVideo />, path: '/second/videos' },
+    {
+      title: 'عروض PPT',
+      icon: <FaFilePowerpoint />,
+      path: '/second/ppt',
+    },
     { title: 'فروض', icon: <FaClipboard />, path: '/second/tests' },
-    { title: 'اختبارات', icon: <FaClipboardCheck />, path: '/second/exams' },
+    {
+      title: 'اختبارات',
+      icon: <FaClipboardCheck />,
+      path: '/second/exams',
+    },
     {
       title: 'تمارين ووضعيات',
       icon: <FaPencilAlt />,
@@ -36,10 +46,26 @@ function Second() {
       icon: <FaListAlt />,
       path: '/second/summaries',
     },
-    { title: 'رسومات صماء', icon: <FaImage />, path: '/second/draw' },
-    { title: 'مخططات', icon: <FaSitemap />, path: '/second/charts' },
-    { title: 'المنهاج', icon: <FaBook />, path: '/second/program' },
-    { title: 'الدليل', icon: <FaBookOpen />, path: '/second/guide' },
+    {
+      title: 'رسومات صماء',
+      icon: <FaImage />,
+      path: '/second/draw',
+    },
+    {
+      title: 'مخططات',
+      icon: <FaSitemap />,
+      path: '/second/charts',
+    },
+    {
+      title: 'المنهاج',
+      icon: <FaBook />,
+      path: '/second/program',
+    },
+    {
+      title: 'الدليل',
+      icon: <FaBookOpen />,
+      path: '/second/guide',
+    },
     {
       title: 'المعالجة البيداغوجية',
       icon: <FaTools />,
@@ -67,9 +93,9 @@ function Second() {
         </h1>
 
         <div className="sections-grid second-level">
-          {sections.map((item, index) => (
+          {sections.map(item => (
             <Link
-              key={index}
+              key={item.path}
               to={item.path}
               className="section-card"
             >

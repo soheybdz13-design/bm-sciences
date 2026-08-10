@@ -4,44 +4,134 @@ import Footer from '../components/Footer'
 import AdminFiles from '../components/AdminFiles'
 import AdminUserUploads from '../components/AdminUserUploads'
 import { supabase } from '../lib/supabaseClient'
+import { uploadToR2 } from '../services/uploadToR2'
 
-import { uploadImage } from '../services/uploadImage'
-import { uploadPdf } from '../services/uploadPdf'
-import { uploadWord } from '../services/uploadWord'
-import { uploadVideo } from '../services/uploadVideo'
+const sectionConfig = {
+  pdf: {
+    label: 'ملفات PDF',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  word: {
+    label: 'ملفات Word',
+    accept:
+      '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    column: 'word',
+    extensions: ['doc', 'docx'],
+  },
+  print: {
+    label: 'صور المطبوعات',
+    accept: 'image/*',
+    column: 'image',
+    extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+  },
+  videos: {
+    label: 'ملفات الفيديو',
+    accept: 'video/*',
+    column: 'video',
+    extensions: ['mp4', 'webm', 'mov'],
+  },
+  ppt: {
+    label: 'عروض PowerPoint',
+    accept:
+      '.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    column: 'ppt',
+    extensions: ['ppt', 'pptx'],
+  },
+  tests: {
+    label: 'ملفات PDF للفروض',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  exams: {
+    label: 'ملفات PDF للاختبارات',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  exercises: {
+    label: 'ملفات PDF للتمارين والوضعيات',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  summaries: {
+    label: 'ملفات PDF للملخصات',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  draw: {
+    label: 'صور الرسومات الصماء',
+    accept: 'image/*',
+    column: 'image',
+    extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+  },
+  charts: {
+    label: 'ملفات PDF للمخططات',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  program: {
+    label: 'ملفات PDF للمنهاج',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  guide: {
+    label: 'ملفات PDF للدليل',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  support: {
+    label: 'ملفات PDF للمعالجة البيداغوجية',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  annual_progression: {
+    label: 'ملفات PDF للتدرج السنوي',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+  monthly_distribution: {
+    label: 'ملفات PDF للتوزيع الشهري',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
+}
+
+function getFileExtension(fileName) {
+  return fileName.split('.').pop()?.toLowerCase() || ''
+}
+
+function getTitleFromFileName(fileName) {
+  return fileName.replace(/\.[^/.]+$/, '')
+}
 
 function Admin() {
   const [loading, setLoading] = useState(false)
-
-  const [title, setTitle] = useState('')
   const [level, setLevel] = useState('')
   const [section, setSection] = useState('')
   const [term, setTerm] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
-
-  const [imageFile, setImageFile] = useState(null)
-  const [pdfFile, setPdfFile] = useState(null)
-  const [wordFile, setWordFile] = useState(null)
-  const [videoFile, setVideoFile] = useState(null)
+  const [files, setFiles] = useState([])
+  const [progress, setProgress] = useState(null)
+  const [results, setResults] = useState([])
+  const [fileInputKey, setFileInputKey] = useState(0)
 
   const needsTerm = section === 'tests' || section === 'exams'
-
-  const needsPdf =
-    section === 'pdf' ||
-    section === 'tests' ||
-    section === 'exams' ||
-    section === 'exercises' ||
-    section === 'summaries' ||
-    section === 'charts' ||
-    section === 'program' ||
-    section === 'guide' ||
-    section === 'support' ||
-    section === 'annual_progression' ||
-    section === 'monthly_distribution'
+  const currentConfig = sectionConfig[section]
 
   async function handleUploadAll() {
-    if (!title || !level || !section) {
-      alert('املأ المعلومات الأساسية')
+    if (!level || !section) {
+      alert('اختر المستوى والقسم')
       return
     }
 
@@ -50,92 +140,119 @@ function Admin() {
       return
     }
 
-    try {
-      setLoading(true)
-
-      let image = ''
-      let pdf = ''
-      let word = ''
-      let video = ''
-
-      if (needsPdf) {
-        if (!pdfFile) {
-          alert('اختر ملف PDF')
-          return
-        }
-
-        pdf = await uploadPdf(pdfFile)
-      } else if (section === 'word') {
-        if (!wordFile) {
-          alert('اختر ملف Word')
-          return
-        }
-
-        word = await uploadWord(wordFile)
-      } else if (
-        section === 'print' ||
-        section === 'draw'
-      ) {
-        if (!imageFile) {
-          alert('اختر صورة')
-          return
-        }
-
-        image = await uploadImage(imageFile)
-      } else if (section === 'videos') {
-        if (!videoFile) {
-          alert('اختر فيديو')
-          return
-        }
-
-        video = await uploadVideo(videoFile)
-      }
-
-      const { error } = await supabase
-        .from('lessons')
-        .insert([
-          {
-            title,
-            level,
-            section,
-            term: needsTerm ? term : null,
-            image,
-            pdf,
-            word,
-            video,
-            youtube: youtubeUrl || null,
-          },
-        ])
-
-      if (error) {
-        alert(error.message)
-        return
-      }
-
-      alert('تمت إضافة الملف بنجاح')
-
-      setTitle('')
-      setLevel('')
-      setSection('')
-      setTerm('')
-      setYoutubeUrl('')
-      setImageFile(null)
-      setPdfFile(null)
-      setWordFile(null)
-      setVideoFile(null)
-    } catch (err) {
-      console.error('UPLOAD ERROR:', err)
-
-      if (err?.message) {
-        alert(err.message)
-      } else if (typeof err === 'string') {
-        alert(err)
-      } else {
-        alert(JSON.stringify(err, null, 2))
-      }
-    } finally {
-      setLoading(false)
+    if (files.length === 0) {
+      alert('اختر ملفًا واحدًا على الأقل')
+      return
     }
+
+    if (!currentConfig) {
+      alert('القسم المختار غير صالح')
+      return
+    }
+
+    const invalidFiles = files.filter(file => {
+      const extension = getFileExtension(file.name)
+
+      return !currentConfig.extensions.includes(extension)
+    })
+
+    if (invalidFiles.length > 0) {
+      alert(
+        `هذه الملفات لا تناسب القسم المختار:\n${invalidFiles
+          .map(file => file.name)
+          .join('\n')}`
+      )
+      return
+    }
+
+    const confirmed = window.confirm(
+      `سيتم رفع ${files.length} ملفًا في قسم: ${currentConfig.label}.\n\nكل ملف سيُحفظ باسمه الأصلي. هل تريد المتابعة؟`
+    )
+
+    if (!confirmed) return
+
+    setLoading(true)
+    setResults([])
+    setProgress({
+      current: 0,
+      total: files.length,
+      fileName: '',
+    })
+
+    const uploadResults = []
+
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index]
+
+      setProgress({
+        current: index + 1,
+        total: files.length,
+        fileName: file.name,
+      })
+
+      try {
+        const fileUrl = await uploadToR2(file)
+
+        const lesson = {
+          title: getTitleFromFileName(file.name),
+          level,
+          section,
+          term: needsTerm ? term : null,
+          image: '',
+          pdf: '',
+          word: '',
+          video: '',
+          ppt: '',
+          youtube: youtubeUrl || null,
+        }
+
+        lesson[currentConfig.column] = fileUrl
+
+        const { error } = await supabase
+          .from('lessons')
+          .insert([lesson])
+
+        if (error) {
+          throw new Error(error.message)
+        }
+
+        uploadResults.push({
+          fileName: file.name,
+          success: true,
+        })
+      } catch (err) {
+        console.error('UPLOAD ERROR:', file.name, err)
+
+        uploadResults.push({
+          fileName: file.name,
+          success: false,
+          error: err?.message || 'وقع خطأ غير معروف',
+        })
+      }
+
+      setResults([...uploadResults])
+    }
+
+    const successCount = uploadResults.filter(
+      item => item.success
+    ).length
+
+    const failedCount = uploadResults.length - successCount
+
+    setLoading(false)
+    setProgress(null)
+
+    if (failedCount === 0) {
+      alert(`تم رفع وإضافة ${successCount} ملفًا بنجاح`)
+      setFiles([])
+      setYoutubeUrl('')
+      setFileInputKey(prev => prev + 1)
+      return
+    }
+
+    alert(
+      `تم رفع ${successCount} ملفًا بنجاح، وفشل رفع ${failedCount} ملفًا. راجع النتائج أسفل الزر.`
+    )
   }
 
   return (
@@ -146,18 +263,13 @@ function Admin() {
         <h1>لوحة الإدارة</h1>
 
         <div className="card">
-          <input
-            type="text"
-            placeholder="عنوان الملف"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-          />
-
-          <br />
-          <br />
+          <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
+            رفع جماعي للملفات
+          </h2>
 
           <select
             value={level}
+            disabled={loading}
             onChange={e => setLevel(e.target.value)}
           >
             <option value="">اختر المستوى</option>
@@ -167,14 +279,15 @@ function Admin() {
             <option value="fourth">الرابعة متوسط</option>
           </select>
 
-          <br />
-          <br />
-
           <select
             value={section}
+            disabled={loading}
             onChange={e => {
               setSection(e.target.value)
               setTerm('')
+              setFiles([])
+              setResults([])
+              setFileInputKey(prev => prev + 1)
             }}
           >
             <option value="">اختر القسم</option>
@@ -182,6 +295,7 @@ function Admin() {
             <option value="word">مذكرات Word</option>
             <option value="print">مطبوعات</option>
             <option value="videos">فيديوهات</option>
+            <option value="ppt">عروض PPT</option>
             <option value="tests">فروض</option>
             <option value="exams">اختبارات</option>
             <option value="exercises">تمارين ووضعيات</option>
@@ -191,12 +305,13 @@ function Admin() {
             <option value="program">المنهاج</option>
             <option value="guide">الدليل</option>
             <option value="support">المعالجة البيداغوجية</option>
-            <option value="annual_progression">التدرج السنوي</option>
-            <option value="monthly_distribution">التوزيع الشهري</option>
+            <option value="annual_progression">
+              التدرج السنوي
+            </option>
+            <option value="monthly_distribution">
+              التوزيع الشهري
+            </option>
           </select>
-
-          <br />
-          <br />
 
           {needsTerm && (
             <>
@@ -204,6 +319,7 @@ function Admin() {
 
               <select
                 value={term}
+                disabled={loading}
                 onChange={e => setTerm(e.target.value)}
               >
                 <option value="">اختر الفصل</option>
@@ -211,101 +327,113 @@ function Admin() {
                 <option value="term2">الفصل الثاني</option>
                 <option value="term3">الفصل الثالث</option>
               </select>
-
-              <br />
-              <br />
             </>
           )}
 
           <input
             type="text"
-            placeholder="رابط فيديو YouTube (اختياري)"
+            placeholder="رابط فيديو YouTube اختياري، يضاف لكل الملفات"
             value={youtubeUrl}
+            disabled={loading}
             onChange={e => setYoutubeUrl(e.target.value)}
           />
 
-          <br />
-          <br />
-
-          {needsPdf && (
+          {currentConfig && (
             <>
-              <label>
-                {section === 'charts'
-                  ? 'ملف PDF للمخطط'
-                  : 'ملف PDF'}
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                }}
+              >
+                اختر عدة ملفات: {currentConfig.label}
               </label>
 
               <input
+                key={fileInputKey}
                 type="file"
-                accept=".pdf,application/pdf"
-                onChange={e => setPdfFile(e.target.files[0])}
+                multiple
+                accept={currentConfig.accept}
+                disabled={loading}
+                onChange={e => {
+                  setFiles(Array.from(e.target.files || []))
+                  setResults([])
+                }}
               />
 
-              <br />
-              <br />
+              {files.length > 0 && (
+                <p
+                  style={{
+                    marginTop: '12px',
+                    color: '#1b5e20',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  تم اختيار {files.length} ملفًا.
+                </p>
+              )}
             </>
           )}
 
-          {section === 'word' && (
-            <>
-              <label>ملف Word</label>
+          {progress && (
+            <div
+              style={{
+                marginTop: '18px',
+                padding: '12px',
+                background: '#e8f5e9',
+                borderRadius: '8px',
+                lineHeight: '1.8',
+              }}
+            >
+              <div>
+                جاري رفع الملف {progress.current} من {progress.total}
+              </div>
 
-              <input
-                type="file"
-                accept=".doc,.docx"
-                onChange={e => setWordFile(e.target.files[0])}
-              />
-
-              <br />
-              <br />
-            </>
-          )}
-
-          {(section === 'print' || section === 'draw') && (
-            <>
-              <label>الصورة</label>
-
-              <input
-                type="file"
-                accept="image/*"
-                onChange={e => setImageFile(e.target.files[0])}
-              />
-
-              <br />
-              <br />
-            </>
-          )}
-
-          {section === 'videos' && (
-            <>
-              <label>الفيديو (ملف)</label>
-
-              <input
-                type="file"
-                accept="video/*"
-                onChange={e => setVideoFile(e.target.files[0])}
-              />
-
-              <br />
-              <br />
-            </>
+              <div style={{ wordBreak: 'break-word' }}>
+                {progress.fileName}
+              </div>
+            </div>
           )}
 
           <button
             onClick={handleUploadAll}
-            disabled={loading}
+            disabled={loading || !currentConfig}
             style={{
               background: '#1b5e20',
               color: '#fff',
               padding: '12px 25px',
               border: 'none',
               borderRadius: '8px',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
               fontSize: '18px',
             }}
           >
-            {loading ? 'جاري رفع الملفات...' : 'حفظ الملف'}
+            {loading
+              ? 'جاري رفع الملفات...'
+              : 'رفع الملفات المختارة'}
           </button>
+
+          {results.length > 0 && (
+            <div style={{ marginTop: '25px' }}>
+              <h3 style={{ marginBottom: '10px' }}>
+                نتيجة الرفع
+              </h3>
+
+              {results.map(result => (
+                <p
+                  key={result.fileName}
+                  style={{
+                    color: result.success ? '#1b5e20' : '#c62828',
+                    marginBottom: '8px',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {result.success ? '✓' : '✕'} {result.fileName}
+                  {!result.success && ` — ${result.error}`}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
 
         <AdminUserUploads />

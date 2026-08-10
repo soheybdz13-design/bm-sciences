@@ -16,6 +16,7 @@ function UserUpload() {
   const [file, setFile] = useState(null)
   const [turnstileToken, setTurnstileToken] = useState('')
   const [loading, setLoading] = useState(false)
+  const [fileInputKey, setFileInputKey] = useState(0)
 
   const turnstileRef = useRef(null)
   const widgetId = useRef(null)
@@ -32,16 +33,22 @@ function UserUpload() {
         return
       }
 
-      widgetId.current = window.turnstile.render(turnstileRef.current, {
-        sitekey: TURNSTILE_SITE_KEY,
-        callback: token => setTurnstileToken(token),
-        'expired-callback': () => setTurnstileToken(''),
-        'error-callback': () => setTurnstileToken(''),
-      })
+      widgetId.current = window.turnstile.render(
+        turnstileRef.current,
+        {
+          sitekey: TURNSTILE_SITE_KEY,
+          callback: token => setTurnstileToken(token),
+          'expired-callback': () => setTurnstileToken(''),
+          'error-callback': () => setTurnstileToken(''),
+        }
+      )
     }
 
+    const scriptUrl =
+      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+
     const existingScript = document.querySelector(
-      'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"]'
+      `script[src="${scriptUrl}"]`
     )
 
     if (existingScript) {
@@ -49,15 +56,16 @@ function UserUpload() {
       renderTurnstile()
 
       return () => {
-        existingScript.removeEventListener('load', renderTurnstile)
+        existingScript.removeEventListener(
+          'load',
+          renderTurnstile
+        )
       }
     }
 
     const script = document.createElement('script')
 
-    script.src =
-      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-
+    script.src = scriptUrl
     script.async = true
     script.defer = true
     script.onload = renderTurnstile
@@ -84,7 +92,7 @@ function UserUpload() {
     }
 
     if (!file) {
-      alert('اختر ملفاً واحداً على الأقل')
+      alert('اختر ملفًا واحدًا على الأقل')
       return
     }
 
@@ -96,15 +104,19 @@ function UserUpload() {
     try {
       setLoading(true)
 
-      const uploadResponse = await fetch(`${WORKER_URL}/upload`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': file.type || 'application/octet-stream',
-          'X-File-Name': encodeURIComponent(file.name),
-          'X-Turnstile-Token': turnstileToken,
-        },
-        body: file,
-      })
+      const uploadResponse = await fetch(
+        `${WORKER_URL}/upload`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              file.type || 'application/octet-stream',
+            'X-File-Name': encodeURIComponent(file.name),
+            'X-Turnstile-Token': turnstileToken,
+          },
+          body: file,
+        }
+      )
 
       const uploadResult = await uploadResponse.json()
 
@@ -135,7 +147,7 @@ function UserUpload() {
         return
       }
 
-      alert('تم إرسال ملفك للمراجعة، شكراً لك!')
+      alert('تم إرسال ملفك للمراجعة، شكرًا لك!')
 
       setTitle('')
       setLevel('')
@@ -145,6 +157,7 @@ function UserUpload() {
       setEmail('')
       setFile(null)
       setTurnstileToken('')
+      setFileInputKey(prev => prev + 1)
 
       if (window.turnstile && widgetId.current !== null) {
         window.turnstile.reset(widgetId.current)
@@ -168,12 +181,14 @@ function UserUpload() {
           type="text"
           placeholder="عنوان الملف"
           value={title}
+          disabled={loading}
           onChange={e => setTitle(e.target.value)}
           style={{ width: '100%', marginBottom: '15px' }}
         />
 
         <select
           value={level}
+          disabled={loading}
           onChange={e => setLevel(e.target.value)}
           style={{ width: '100%', marginBottom: '15px' }}
         >
@@ -186,9 +201,12 @@ function UserUpload() {
 
         <select
           value={section}
+          disabled={loading}
           onChange={e => {
             setSection(e.target.value)
             setTerm('')
+            setFile(null)
+            setFileInputKey(prev => prev + 1)
           }}
           style={{ width: '100%', marginBottom: '15px' }}
         >
@@ -197,6 +215,7 @@ function UserUpload() {
           <option value="word">مذكرات Word</option>
           <option value="print">مطبوعات</option>
           <option value="videos">فيديوهات</option>
+          <option value="ppt">عروض PPT</option>
           <option value="tests">فروض</option>
           <option value="exams">اختبارات</option>
           <option value="exercises">تمارين ووضعيات</option>
@@ -206,13 +225,18 @@ function UserUpload() {
           <option value="program">المنهاج</option>
           <option value="guide">الدليل</option>
           <option value="support">المعالجة البيداغوجية</option>
-          <option value="annual_progression">التدرج السنوي</option>
-          <option value="monthly_distribution">التوزيع الشهري</option>
+          <option value="annual_progression">
+            التدرج السنوي
+          </option>
+          <option value="monthly_distribution">
+            التوزيع الشهري
+          </option>
         </select>
 
         {needsTerm && (
           <select
             value={term}
+            disabled={loading}
             onChange={e => setTerm(e.target.value)}
             style={{ width: '100%', marginBottom: '15px' }}
           >
@@ -227,6 +251,7 @@ function UserUpload() {
           type="text"
           placeholder="رابط فيديو YouTube (اختياري)"
           value={youtubeUrl}
+          disabled={loading}
           onChange={e => setYoutubeUrl(e.target.value)}
           style={{ width: '100%', marginBottom: '15px' }}
         />
@@ -235,17 +260,20 @@ function UserUpload() {
           type="email"
           placeholder="بريدك الإلكتروني ليصلك إشعار القبول أو الرفض"
           value={email}
+          disabled={loading}
           onChange={e => setEmail(e.target.value)}
           style={{ width: '100%', marginBottom: '15px' }}
         />
 
         <label style={{ display: 'block', marginBottom: '5px' }}>
-          اختر الملف المناسب: PDF أو Word أو صورة أو فيديو
+          اختر الملف: PDF أو Word أو صورة أو فيديو أو عرض PPT
         </label>
 
         <input
+          key={fileInputKey}
           type="file"
-          accept=".pdf,.doc,.docx,image/*,video/*"
+          accept=".pdf,.doc,.docx,.ppt,.pptx,image/*,video/*"
+          disabled={loading}
           onChange={e => setFile(e.target.files[0] || null)}
           style={{ marginBottom: '20px' }}
         />
@@ -268,7 +296,9 @@ function UserUpload() {
             fontSize: '18px',
           }}
         >
-          {loading ? 'جاري إرسال الملف...' : 'إرسال الملف للمراجعة'}
+          {loading
+            ? 'جاري إرسال الملف...'
+            : 'إرسال الملف للمراجعة'}
         </button>
       </form>
     </div>

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import {
   FaFilePdf,
   FaFileWord,
+  FaFilePowerpoint,
   FaPrint,
   FaVideo,
   FaClipboard,
@@ -24,8 +25,17 @@ function Fourth() {
     { title: 'مذكرات Word', icon: <FaFileWord />, path: '/fourth/word' },
     { title: 'مطبوعات', icon: <FaPrint />, path: '/fourth/print' },
     { title: 'فيديوهات', icon: <FaVideo />, path: '/fourth/videos' },
+    {
+      title: 'عروض PPT',
+      icon: <FaFilePowerpoint />,
+      path: '/fourth/ppt',
+    },
     { title: 'فروض', icon: <FaClipboard />, path: '/fourth/tests' },
-    { title: 'اختبارات', icon: <FaClipboardCheck />, path: '/fourth/exams' },
+    {
+      title: 'اختبارات',
+      icon: <FaClipboardCheck />,
+      path: '/fourth/exams',
+    },
     {
       title: 'تمارين ووضعيات',
       icon: <FaPencilAlt />,
@@ -36,10 +46,26 @@ function Fourth() {
       icon: <FaListAlt />,
       path: '/fourth/summaries',
     },
-    { title: 'رسومات صماء', icon: <FaImage />, path: '/fourth/draw' },
-    { title: 'مخططات', icon: <FaSitemap />, path: '/fourth/charts' },
-    { title: 'المنهاج', icon: <FaBook />, path: '/fourth/program' },
-    { title: 'الدليل', icon: <FaBookOpen />, path: '/fourth/guide' },
+    {
+      title: 'رسومات صماء',
+      icon: <FaImage />,
+      path: '/fourth/draw',
+    },
+    {
+      title: 'مخططات',
+      icon: <FaSitemap />,
+      path: '/fourth/charts',
+    },
+    {
+      title: 'المنهاج',
+      icon: <FaBook />,
+      path: '/fourth/program',
+    },
+    {
+      title: 'الدليل',
+      icon: <FaBookOpen />,
+      path: '/fourth/guide',
+    },
     {
       title: 'المعالجة البيداغوجية',
       icon: <FaTools />,
@@ -67,9 +93,9 @@ function Fourth() {
         </h1>
 
         <div className="sections-grid fourth-level">
-          {sections.map((item, index) => (
+          {sections.map(item => (
             <Link
-              key={index}
+              key={item.path}
               to={item.path}
               className="section-card"
             >

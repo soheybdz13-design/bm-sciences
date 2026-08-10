@@ -9,6 +9,7 @@ const sectionLabels = {
   word: 'مذكرات Word',
   print: 'مطبوعات',
   videos: 'فيديوهات',
+  ppt: 'عروض PPT',
   tests: 'فروض',
   exams: 'اختبارات',
   exercises: 'تمارين ووضعيات',
@@ -18,7 +19,23 @@ const sectionLabels = {
   program: 'المنهاج',
   guide: 'الدليل',
   support: 'المعالجة البيداغوجية',
+  annual_progression: 'التدرج السنوي',
+  monthly_distribution: 'التوزيع الشهري',
 }
+
+const pdfSections = [
+  'pdf',
+  'tests',
+  'exams',
+  'exercises',
+  'summaries',
+  'charts',
+  'program',
+  'guide',
+  'support',
+  'annual_progression',
+  'monthly_distribution',
+]
 
 function AdminUserUploads() {
   const [items, setItems] = useState([])
@@ -52,14 +69,19 @@ function AdminUserUploads() {
   }
 
   function isR2File(fileUrl) {
-    return /^uploads\/\d+-[a-f0-9-]{36}\./i.test(fileUrl || '')
+    return (fileUrl || '').startsWith('uploads/')
   }
 
   function getPublicUrl(fileUrl) {
     if (!fileUrl) return null
 
     if (isR2File(fileUrl)) {
-      return `${R2_WORKER_URL}/files/${fileUrl}`
+      const encodedPath = fileUrl
+        .split('/')
+        .map(part => encodeURIComponent(part))
+        .join('/')
+
+      return `${R2_WORKER_URL}/files/${encodedPath}`
     }
 
     const { data } = supabase.storage
@@ -70,9 +92,7 @@ function AdminUserUploads() {
   }
 
   async function notifyUser(type, item, reason = '') {
-    if (!item.user_email) {
-      return
-    }
+    if (!item.user_email) return
 
     try {
       await fetch('/.netlify/functions/send-notification', {
@@ -102,30 +122,23 @@ function AdminUserUploads() {
       let pdf = ''
       let word = ''
       let video = ''
+      let ppt = ''
 
       const filePath = getStoragePath(item.file_url)
 
-      if (
-        item.section === 'pdf' ||
-        item.section === 'tests' ||
-        item.section === 'exams' ||
-        item.section === 'exercises' ||
-        item.section === 'summaries' ||
-        item.section === 'program' ||
-        item.section === 'guide' ||
-        item.section === 'support'
-      ) {
+      if (pdfSections.includes(item.section)) {
         pdf = filePath
       } else if (item.section === 'word') {
         word = filePath
       } else if (
         item.section === 'print' ||
-        item.section === 'draw' ||
-        item.section === 'charts'
+        item.section === 'draw'
       ) {
         image = filePath
       } else if (item.section === 'videos') {
         video = filePath
+      } else if (item.section === 'ppt') {
+        ppt = filePath
       }
 
       const { error: insertError } = await supabase
@@ -140,6 +153,7 @@ function AdminUserUploads() {
             pdf,
             word,
             video,
+            ppt,
             youtube: item.youtube || null,
           },
         ])
@@ -179,7 +193,10 @@ function AdminUserUploads() {
 
     if (!ok) return
 
-    const reason = window.prompt('اكتب سبب الرفض (اختياري):', '')
+    const reason = window.prompt(
+      'اكتب سبب الرفض (اختياري):',
+      ''
+    )
 
     try {
       const filePath = getStoragePath(item.file_url)
@@ -190,7 +207,10 @@ function AdminUserUploads() {
           .remove([filePath])
 
         if (storageError) {
-          console.error('ERROR deleting old Supabase file:', storageError)
+          console.error(
+            'ERROR deleting old Supabase file:',
+            storageError
+          )
         }
       }
 
@@ -203,7 +223,10 @@ function AdminUserUploads() {
         .eq('id', item.id)
 
       if (updateError) {
-        console.error('ERROR updating user_uploads (reject):', updateError)
+        console.error(
+          'ERROR updating user_uploads (reject):',
+          updateError
+        )
         alert('وقع خطأ أثناء تحديث حالة الطلب')
         return
       }
@@ -281,7 +304,7 @@ function AdminUserUploads() {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        معاينة الملف
+                        فتح الملف
                       </a>
                     ) : (
                       'لا يوجد'
@@ -312,6 +335,7 @@ function AdminUserUploads() {
                         borderRadius: '6px',
                         cursor: 'pointer',
                         marginRight: '8px',
+                        width: 'auto',
                       }}
                       onClick={() => handleApprove(item)}
                     >
@@ -326,6 +350,7 @@ function AdminUserUploads() {
                         padding: '6px 10px',
                         borderRadius: '6px',
                         cursor: 'pointer',
+                        width: 'auto',
                       }}
                       onClick={() => handleReject(item)}
                     >

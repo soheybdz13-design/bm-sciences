@@ -8,6 +8,7 @@ import PdfSection from '../components/PdfSection'
 import WordSection from '../components/WordSection'
 import VideoSection from '../components/VideoSection'
 import ImageSection from '../components/ImageSection'
+import PptSection from '../components/PptSection'
 
 function LevelPage() {
   const { level, section, term } = useParams()
@@ -20,6 +21,7 @@ function LevelPage() {
     word: 'مذكرات Word',
     print: 'مطبوعات',
     videos: 'فيديوهات',
+    ppt: 'عروض PPT',
     tests: 'فروض',
     exams: 'اختبارات',
     exercises: 'تمارين ووضعيات',
@@ -100,6 +102,9 @@ function LevelPage() {
       case 'print':
       case 'draw':
         return <ImageSection lessons={lessons} />
+
+      case 'ppt':
+        return <PptSection lessons={lessons} />
 
       default:
         return <PdfSection lessons={lessons} />

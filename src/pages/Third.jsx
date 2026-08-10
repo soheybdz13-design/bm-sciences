@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import {
   FaFilePdf,
   FaFileWord,
+  FaFilePowerpoint,
   FaPrint,
   FaVideo,
   FaClipboard,
@@ -24,8 +25,17 @@ function Third() {
     { title: 'مذكرات Word', icon: <FaFileWord />, path: '/third/word' },
     { title: 'مطبوعات', icon: <FaPrint />, path: '/third/print' },
     { title: 'فيديوهات', icon: <FaVideo />, path: '/third/videos' },
+    {
+      title: 'عروض PPT',
+      icon: <FaFilePowerpoint />,
+      path: '/third/ppt',
+    },
     { title: 'فروض', icon: <FaClipboard />, path: '/third/tests' },
-    { title: 'اختبارات', icon: <FaClipboardCheck />, path: '/third/exams' },
+    {
+      title: 'اختبارات',
+      icon: <FaClipboardCheck />,
+      path: '/third/exams',
+    },
     {
       title: 'تمارين ووضعيات',
       icon: <FaPencilAlt />,
@@ -36,10 +46,26 @@ function Third() {
       icon: <FaListAlt />,
       path: '/third/summaries',
     },
-    { title: 'رسومات صماء', icon: <FaImage />, path: '/third/draw' },
-    { title: 'مخططات', icon: <FaSitemap />, path: '/third/charts' },
-    { title: 'المنهاج', icon: <FaBook />, path: '/third/program' },
-    { title: 'الدليل', icon: <FaBookOpen />, path: '/third/guide' },
+    {
+      title: 'رسومات صماء',
+      icon: <FaImage />,
+      path: '/third/draw',
+    },
+    {
+      title: 'مخططات',
+      icon: <FaSitemap />,
+      path: '/third/charts',
+    },
+    {
+      title: 'المنهاج',
+      icon: <FaBook />,
+      path: '/third/program',
+    },
+    {
+      title: 'الدليل',
+      icon: <FaBookOpen />,
+      path: '/third/guide',
+    },
     {
       title: 'المعالجة البيداغوجية',
       icon: <FaTools />,
@@ -67,9 +93,9 @@ function Third() {
         </h1>
 
         <div className="sections-grid third-level">
-          {sections.map((item, index) => (
+          {sections.map(item => (
             <Link
-              key={index}
+              key={item.path}
               to={item.path}
               className="section-card"
             >
