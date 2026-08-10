@@ -10,6 +10,21 @@ import VideoSection from '../components/VideoSection'
 import ImageSection from '../components/ImageSection'
 import PptSection from '../components/PptSection'
 
+function getLastNumber(title = '') {
+  const normalizedTitle = title.replace(
+    /[٠-٩]/g,
+    digit => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit).toString()
+  )
+
+  const numbers = normalizedTitle.match(/\d+/g)
+
+  if (!numbers || numbers.length === 0) {
+    return -1
+  }
+
+  return Number(numbers[numbers.length - 1])
+}
+
 function LevelPage() {
   const { level, section, term } = useParams()
 
@@ -69,7 +84,7 @@ function LevelPage() {
         .select('*')
         .eq('level', level)
         .eq('section', section)
-        .order('title', { ascending: true })
+        .order('created_at', { ascending: false })
 
       if (term) {
         query = query.eq('term', term)
@@ -80,9 +95,21 @@ function LevelPage() {
       if (error) {
         console.error(error)
         setLessons([])
-      } else {
-        setLessons(data || [])
+        return
       }
+
+      const sortedLessons = [...(data || [])].sort((a, b) => {
+        const numberA = getLastNumber(a.title)
+        const numberB = getLastNumber(b.title)
+
+        if (numberA !== numberB) {
+          return numberB - numberA
+        }
+
+        return b.title.localeCompare(a.title, 'ar')
+      })
+
+      setLessons(sortedLessons)
     } catch (err) {
       console.error(err)
       setLessons([])
