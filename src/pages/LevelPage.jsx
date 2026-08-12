@@ -39,6 +39,7 @@ function LevelPage() {
     ppt: 'عروض PPT',
     tests: 'فروض',
     exams: 'اختبارات',
+    bem: 'مواضيع BEM',
     exercises: 'تمارين ووضعيات',
     summaries: 'ملخصات',
     draw: 'رسومات صماء',
@@ -63,7 +64,8 @@ function LevelPage() {
     term3: 'الفصل الثالث',
   }
 
-  const hasTerms = section === 'tests' || section === 'exams'
+  const hasTerms =
+    section === 'tests' || section === 'exams'
 
   useEffect(() => {
     if (hasTerms && !term) {
@@ -98,16 +100,18 @@ function LevelPage() {
         return
       }
 
-      const sortedLessons = [...(data || [])].sort((a, b) => {
-        const numberA = getLastNumber(a.title)
-        const numberB = getLastNumber(b.title)
+      const sortedLessons = [...(data || [])].sort(
+        (a, b) => {
+          const numberA = getLastNumber(a.title)
+          const numberB = getLastNumber(b.title)
 
-        if (numberA !== numberB) {
-          return numberB - numberA
+          if (numberA !== numberB) {
+            return numberB - numberA
+          }
+
+          return b.title.localeCompare(a.title, 'ar')
         }
-
-        return b.title.localeCompare(a.title, 'ar')
-      })
+      )
 
       setLessons(sortedLessons)
     } catch (err) {
@@ -139,7 +143,8 @@ function LevelPage() {
   }
 
   function renderTerms() {
-    const prefix = section === 'tests' ? 'فروض' : 'اختبارات'
+    const prefix =
+      section === 'tests' ? 'فروض' : 'اختبارات'
 
     return (
       <div className="sections-grid">

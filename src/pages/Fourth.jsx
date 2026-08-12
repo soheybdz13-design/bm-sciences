@@ -21,20 +21,45 @@ import {
 
 function Fourth() {
   const sections = [
-    { title: 'مذكرات PDF', icon: <FaFilePdf />, path: '/fourth/pdf' },
-    { title: 'مذكرات Word', icon: <FaFileWord />, path: '/fourth/word' },
-    { title: 'مطبوعات', icon: <FaPrint />, path: '/fourth/print' },
-    { title: 'فيديوهات', icon: <FaVideo />, path: '/fourth/videos' },
+    {
+      title: 'مذكرات PDF',
+      icon: <FaFilePdf />,
+      path: '/fourth/pdf',
+    },
+    {
+      title: 'مذكرات Word',
+      icon: <FaFileWord />,
+      path: '/fourth/word',
+    },
+    {
+      title: 'مطبوعات',
+      icon: <FaPrint />,
+      path: '/fourth/print',
+    },
+    {
+      title: 'فيديوهات',
+      icon: <FaVideo />,
+      path: '/fourth/videos',
+    },
     {
       title: 'عروض PPT',
       icon: <FaFilePowerpoint />,
       path: '/fourth/ppt',
     },
-    { title: 'فروض', icon: <FaClipboard />, path: '/fourth/tests' },
+    {
+      title: 'فروض',
+      icon: <FaClipboard />,
+      path: '/fourth/tests',
+    },
     {
       title: 'اختبارات',
       icon: <FaClipboardCheck />,
       path: '/fourth/exams',
+    },
+    {
+      title: 'مواضيع BEM',
+      icon: <FaFilePdf />,
+      path: '/fourth/bem',
     },
     {
       title: 'تمارين ووضعيات',

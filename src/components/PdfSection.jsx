@@ -1,7 +1,19 @@
 import { useState } from 'react'
+import {
+  SpecialZoomLevel,
+  Viewer,
+  Worker,
+} from '@react-pdf-viewer/core'
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout'
+
+import '@react-pdf-viewer/core/lib/styles/index.css'
+import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 
 const R2_WORKER_URL =
   'https://bm-sciences-upload.soheybdz13.workers.dev'
+
+const PDF_WORKER_URL =
+  'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
 
 function getPdfUrl(pdf) {
   if (!pdf) return null
@@ -16,6 +28,70 @@ function getPdfUrl(pdf) {
   }
 
   return pdf
+}
+
+function PdfViewer({ pdfUrl }) {
+  const defaultLayoutPluginInstance = defaultLayoutPlugin()
+
+  return (
+    <Worker workerUrl={PDF_WORKER_URL}>
+      <Viewer
+        fileUrl={pdfUrl}
+        plugins={[defaultLayoutPluginInstance]}
+        defaultScale={2}
+        renderLoader={() => (
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontSize: '18px',
+            }}
+          >
+            جاري تحميل ملف PDF...
+          </div>
+        )}
+        renderError={error => (
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '25px',
+              textAlign: 'center',
+              color: '#fff',
+              gap: '12px',
+            }}
+          >
+            <strong>تعذر عرض ملف PDF.</strong>
+
+            <span style={{ color: '#ffb4b4' }}>
+              {error.message}
+            </span>
+
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                background: '#1565c0',
+                color: '#fff',
+                textDecoration: 'none',
+                padding: '10px 15px',
+                borderRadius: '7px',
+              }}
+            >
+              فتح الملف مباشرة
+            </a>
+          </div>
+        )}
+      />
+    </Worker>
+  )
 }
 
 function PdfSection({ lessons }) {
@@ -144,11 +220,11 @@ function PdfSection({ lessons }) {
             position: 'fixed',
             inset: 0,
             zIndex: 9999,
-            background: 'rgba(0, 0, 0, 0.82)',
+            background: 'rgba(0, 0, 0, 0.85)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '15px',
+            padding: '12px',
             direction: 'rtl',
           }}
         >
@@ -156,9 +232,9 @@ function PdfSection({ lessons }) {
             onClick={event => event.stopPropagation()}
             style={{
               width: '100%',
-              maxWidth: '1250px',
-              height: '92vh',
-              background: '#fff',
+              maxWidth: '1400px',
+              height: '94vh',
+              background: '#2f2f2f',
               borderRadius: '12px',
               overflow: 'hidden',
               display: 'flex',
@@ -167,13 +243,14 @@ function PdfSection({ lessons }) {
           >
             <div
               style={{
+                minHeight: '56px',
                 background: '#1b5e20',
                 color: '#fff',
-                padding: '12px 16px',
+                padding: '10px 14px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '15px',
+                gap: '12px',
               }}
             >
               <strong
@@ -186,58 +263,32 @@ function PdfSection({ lessons }) {
                 {selectedPdf.title}
               </strong>
 
-              <div
+              <button
+                type="button"
+                onClick={closePreview}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
+                  background: '#c62828',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
                   flexShrink: 0,
                 }}
               >
-                <a
-                  href={selectedPdf.url}
-                  download
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    color: '#fff',
-                    textDecoration: 'none',
-                    background: '#1565c0',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                  }}
-                >
-                  ⬇ تحميل
-                </a>
-
-                <button
-                  type="button"
-                  onClick={closePreview}
-                  style={{
-                    background: '#c62828',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  ✕ إغلاق
-                </button>
-              </div>
+                ✕ إغلاق
+              </button>
             </div>
 
-            <iframe
-              src={`${selectedPdf.url}#toolbar=1&navpanes=0`}
-              title={selectedPdf.title}
+            <div
               style={{
-                width: '100%',
                 flex: 1,
-                border: 'none',
-                background: '#555',
+                minHeight: 0,
               }}
-            />
+            >
+              <PdfViewer pdfUrl={selectedPdf.url} />
+            </div>
           </div>
         </div>
       )}

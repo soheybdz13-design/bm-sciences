@@ -51,6 +51,12 @@ const sectionConfig = {
     column: 'pdf',
     extensions: ['pdf'],
   },
+  bem: {
+    label: 'مواضيع BEM',
+    accept: '.pdf,application/pdf',
+    column: 'pdf',
+    extensions: ['pdf'],
+  },
   exercises: {
     label: 'ملفات PDF للتمارين والوضعيات',
     accept: '.pdf,application/pdf',
@@ -115,6 +121,10 @@ function getTitleFromFileName(fileName) {
   return fileName.replace(/\.[^/.]+$/, '')
 }
 
+function makeTopicTitle(topicNumber) {
+  return `الموضوع رقم ${String(topicNumber).padStart(2, '0')}`
+}
+
 function Admin() {
   const [loading, setLoading] = useState(false)
   const [level, setLevel] = useState('')
@@ -126,7 +136,9 @@ function Admin() {
   const [results, setResults] = useState([])
   const [fileInputKey, setFileInputKey] = useState(0)
 
-  const needsTerm = section === 'tests' || section === 'exams'
+  const needsTerm =
+    section === 'tests' || section === 'exams'
+
   const currentConfig = sectionConfig[section]
 
   async function handleUploadAll() {
@@ -166,13 +178,16 @@ function Admin() {
     }
 
     const confirmed = window.confirm(
-      `سيتم رفع ${files.length} ملفًا في قسم: ${currentConfig.label}.\n\nكل ملف سيُحفظ باسمه الأصلي. هل تريد المتابعة؟`
+      needsTerm
+        ? `سيتم رفع ${files.length} ملفًا في قسم: ${currentConfig.label}.\n\nسيتم ترقيم الملفات تلقائيًا. هل تريد المتابعة؟`
+        : `سيتم رفع ${files.length} ملفًا في قسم: ${currentConfig.label}.\n\nكل ملف سيُحفظ باسمه الأصلي. هل تريد المتابعة؟`
     )
 
     if (!confirmed) return
 
     setLoading(true)
     setResults([])
+
     setProgress({
       current: 0,
       total: files.length,
@@ -193,8 +208,27 @@ function Admin() {
       try {
         const fileUrl = await uploadToR2(file)
 
+        let lessonTitle = getTitleFromFileName(file.name)
+
+        if (needsTerm) {
+          const { data: topicNumber, error: counterError } =
+            await supabase.rpc('next_topic_number', {
+              p_level: level,
+              p_section: section,
+              p_term: term,
+            })
+
+          if (counterError) {
+            throw new Error(
+              `تعذر الحصول على رقم الموضوع التالي: ${counterError.message}`
+            )
+          }
+
+          lessonTitle = makeTopicTitle(topicNumber)
+        }
+
         const lesson = {
-          title: getTitleFromFileName(file.name),
+          title: lessonTitle,
           level,
           section,
           term: needsTerm ? term : null,
@@ -217,7 +251,9 @@ function Admin() {
         }
 
         uploadResults.push({
-          fileName: file.name,
+          fileName: needsTerm
+            ? lessonTitle
+            : file.name,
           success: true,
         })
       } catch (err) {
@@ -244,9 +280,11 @@ function Admin() {
 
     if (failedCount === 0) {
       alert(`تم رفع وإضافة ${successCount} ملفًا بنجاح`)
+
       setFiles([])
       setYoutubeUrl('')
       setFileInputKey(prev => prev + 1)
+
       return
     }
 
@@ -263,14 +301,33 @@ function Admin() {
         <h1>لوحة الإدارة</h1>
 
         <div className="card">
-          <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2
+            style={{
+              textAlign: 'center',
+              marginBottom: '20px',
+            }}
+          >
             رفع جماعي للملفات
           </h2>
 
           <select
             value={level}
             disabled={loading}
-            onChange={e => setLevel(e.target.value)}
+            onChange={e => {
+              setLevel(e.target.value)
+
+              if (
+                e.target.value !== 'fourth' &&
+                section === 'bem'
+              ) {
+                setSection('')
+              }
+
+              setTerm('')
+              setFiles([])
+              setResults([])
+              setFileInputKey(prev => prev + 1)
+            }}
           >
             <option value="">اختر المستوى</option>
             <option value="first">الأولى متوسط</option>
@@ -298,13 +355,22 @@ function Admin() {
             <option value="ppt">عروض PPT</option>
             <option value="tests">فروض</option>
             <option value="exams">اختبارات</option>
-            <option value="exercises">تمارين ووضعيات</option>
+
+            {level === 'fourth' && (
+              <option value="bem">مواضيع BEM</option>
+            )}
+
+            <option value="exercises">
+              تمارين ووضعيات
+            </option>
             <option value="summaries">ملخصات</option>
             <option value="draw">رسومات صماء</option>
             <option value="charts">مخططات</option>
             <option value="program">المنهاج</option>
             <option value="guide">الدليل</option>
-            <option value="support">المعالجة البيداغوجية</option>
+            <option value="support">
+              المعالجة البيداغوجية
+            </option>
             <option value="annual_progression">
               التدرج السنوي
             </option>
@@ -386,7 +452,8 @@ function Admin() {
               }}
             >
               <div>
-                جاري رفع الملف {progress.current} من {progress.total}
+                جاري رفع الملف {progress.current} من{' '}
+                {progress.total}
               </div>
 
               <div style={{ wordBreak: 'break-word' }}>
@@ -419,17 +486,22 @@ function Admin() {
                 نتيجة الرفع
               </h3>
 
-              {results.map(result => (
+              {results.map((result, index) => (
                 <p
-                  key={result.fileName}
+                  key={`${result.fileName}-${index}`}
                   style={{
-                    color: result.success ? '#1b5e20' : '#c62828',
+                    color: result.success
+                      ? '#1b5e20'
+                      : '#c62828',
                     marginBottom: '8px',
                     wordBreak: 'break-word',
                   }}
                 >
-                  {result.success ? '✓' : '✕'} {result.fileName}
-                  {!result.success && ` — ${result.error}`}
+                  {result.success ? '✓' : '✕'}{' '}
+                  {result.fileName}
+
+                  {!result.success &&
+                    ` — ${result.error}`}
                 </p>
               ))}
             </div>

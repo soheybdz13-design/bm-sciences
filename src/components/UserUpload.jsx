@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabaseClient'
 const WORKER_URL =
   'https://bm-sciences-upload.soheybdz13.workers.dev'
 
-const TURNSTILE_SITE_KEY = '0x4AAAAAAEKSC4sa6IMYEu-1'
+const TURNSTILE_SITE_KEY =
+  '0x4AAAAAAEKSC4sa6IMYEu-1'
 
 function UserUpload() {
   const [title, setTitle] = useState('')
@@ -21,7 +22,11 @@ function UserUpload() {
   const turnstileRef = useRef(null)
   const widgetId = useRef(null)
 
-  const needsTerm = section === 'tests' || section === 'exams'
+  const needsTerm =
+    section === 'tests' || section === 'exams'
+
+  const isPdfOnly =
+    needsTerm || section === 'bem'
 
   useEffect(() => {
     function renderTurnstile() {
@@ -52,7 +57,11 @@ function UserUpload() {
     )
 
     if (existingScript) {
-      existingScript.addEventListener('load', renderTurnstile)
+      existingScript.addEventListener(
+        'load',
+        renderTurnstile
+      )
+
       renderTurnstile()
 
       return () => {
@@ -76,8 +85,13 @@ function UserUpload() {
   async function handleSubmit(e) {
     e.preventDefault()
 
-    if (!title || !level || !section) {
-      alert('املأ المعلومات الأساسية: العنوان، المستوى، والقسم')
+    if (!level || !section) {
+      alert('اختر المستوى والقسم')
+      return
+    }
+
+    if (!needsTerm && !title.trim()) {
+      alert('اكتب عنوان الملف')
       return
     }
 
@@ -87,12 +101,21 @@ function UserUpload() {
     }
 
     if (!email) {
-      alert('أدخل بريدك الإلكتروني ليصلك إشعار القبول أو الرفض')
+      alert(
+        'أدخل بريدك الإلكتروني ليصلك إشعار القبول أو الرفض'
+      )
       return
     }
 
     if (!file) {
       alert('اختر ملفًا واحدًا على الأقل')
+      return
+    }
+
+    if (isPdfOnly && file.type !== 'application/pdf') {
+      alert(
+        'الفروض والاختبارات ومواضيع BEM يجب أن تكون في ملف PDF'
+      )
       return
     }
 
@@ -126,11 +149,15 @@ function UserUpload() {
         )
       }
 
+      const temporaryTitle = needsTerm
+        ? 'موضوع'
+        : title.trim()
+
       const { error } = await supabase
         .from('user_uploads')
         .insert([
           {
-            title,
+            title: temporaryTitle,
             level,
             section,
             term: needsTerm ? term : null,
@@ -142,9 +169,12 @@ function UserUpload() {
         ])
 
       if (error) {
-        console.error(error)
-        alert('تم رفع الملف لكن وقع خطأ أثناء حفظ بياناته')
-        return
+        console.error('ERROR saving user upload:', error)
+
+        throw new Error(
+          error.message ||
+            'تم رفع الملف لكن وقع خطأ أثناء حفظ بياناته'
+        )
       }
 
       alert('تم إرسال ملفك للمراجعة، شكرًا لك!')
@@ -159,11 +189,14 @@ function UserUpload() {
       setTurnstileToken('')
       setFileInputKey(prev => prev + 1)
 
-      if (window.turnstile && widgetId.current !== null) {
+      if (
+        window.turnstile &&
+        widgetId.current !== null
+      ) {
         window.turnstile.reset(widgetId.current)
       }
     } catch (err) {
-      console.error(err)
+      console.error('USER UPLOAD ERROR:', err)
       alert(err.message || 'وقع خطأ غير متوقع')
     } finally {
       setLoading(false)
@@ -177,20 +210,45 @@ function UserUpload() {
       </h2>
 
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="عنوان الملف"
-          value={title}
-          disabled={loading}
-          onChange={e => setTitle(e.target.value)}
-          style={{ width: '100%', marginBottom: '15px' }}
-        />
+        {!needsTerm && (
+          <input
+            type="text"
+            placeholder={
+              section === 'bem'
+                ? 'عنوان موضوع BEM'
+                : 'عنوان الملف'
+            }
+            value={title}
+            disabled={loading}
+            onChange={e => setTitle(e.target.value)}
+            style={{
+              width: '100%',
+              marginBottom: '15px',
+            }}
+          />
+        )}
 
         <select
           value={level}
           disabled={loading}
-          onChange={e => setLevel(e.target.value)}
-          style={{ width: '100%', marginBottom: '15px' }}
+          onChange={e => {
+            setLevel(e.target.value)
+
+            if (
+              e.target.value !== 'fourth' &&
+              section === 'bem'
+            ) {
+              setSection('')
+            }
+
+            setTerm('')
+            setFile(null)
+            setFileInputKey(prev => prev + 1)
+          }}
+          style={{
+            width: '100%',
+            marginBottom: '15px',
+          }}
         >
           <option value="">اختر المستوى</option>
           <option value="first">الأولى متوسط</option>
@@ -205,10 +263,14 @@ function UserUpload() {
           onChange={e => {
             setSection(e.target.value)
             setTerm('')
+            setTitle('')
             setFile(null)
             setFileInputKey(prev => prev + 1)
           }}
-          style={{ width: '100%', marginBottom: '15px' }}
+          style={{
+            width: '100%',
+            marginBottom: '15px',
+          }}
         >
           <option value="">اختر القسم</option>
           <option value="pdf">مذكرات PDF</option>
@@ -218,13 +280,22 @@ function UserUpload() {
           <option value="ppt">عروض PPT</option>
           <option value="tests">فروض</option>
           <option value="exams">اختبارات</option>
-          <option value="exercises">تمارين ووضعيات</option>
+
+          {level === 'fourth' && (
+            <option value="bem">مواضيع BEM</option>
+          )}
+
+          <option value="exercises">
+            تمارين ووضعيات
+          </option>
           <option value="summaries">ملخصات</option>
           <option value="draw">رسومات صماء</option>
           <option value="charts">مخططات</option>
           <option value="program">المنهاج</option>
           <option value="guide">الدليل</option>
-          <option value="support">المعالجة البيداغوجية</option>
+          <option value="support">
+            المعالجة البيداغوجية
+          </option>
           <option value="annual_progression">
             التدرج السنوي
           </option>
@@ -238,7 +309,10 @@ function UserUpload() {
             value={term}
             disabled={loading}
             onChange={e => setTerm(e.target.value)}
-            style={{ width: '100%', marginBottom: '15px' }}
+            style={{
+              width: '100%',
+              marginBottom: '15px',
+            }}
           >
             <option value="">اختر الفصل</option>
             <option value="term1">الفصل الأول</option>
@@ -253,7 +327,10 @@ function UserUpload() {
           value={youtubeUrl}
           disabled={loading}
           onChange={e => setYoutubeUrl(e.target.value)}
-          style={{ width: '100%', marginBottom: '15px' }}
+          style={{
+            width: '100%',
+            marginBottom: '15px',
+          }}
         />
 
         <input
@@ -262,19 +339,35 @@ function UserUpload() {
           value={email}
           disabled={loading}
           onChange={e => setEmail(e.target.value)}
-          style={{ width: '100%', marginBottom: '15px' }}
+          style={{
+            width: '100%',
+            marginBottom: '15px',
+          }}
         />
 
-        <label style={{ display: 'block', marginBottom: '5px' }}>
-          اختر الملف: PDF أو Word أو صورة أو فيديو أو عرض PPT
+        <label
+          style={{
+            display: 'block',
+            marginBottom: '5px',
+          }}
+        >
+          {isPdfOnly
+            ? 'اختر ملف PDF'
+            : 'اختر الملف: PDF أو Word أو صورة أو فيديو أو عرض PPT'}
         </label>
 
         <input
           key={fileInputKey}
           type="file"
-          accept=".pdf,.doc,.docx,.ppt,.pptx,image/*,video/*"
+          accept={
+            isPdfOnly
+              ? '.pdf,application/pdf'
+              : '.pdf,.doc,.docx,.ppt,.pptx,image/*,video/*'
+          }
           disabled={loading}
-          onChange={e => setFile(e.target.files[0] || null)}
+          onChange={e =>
+            setFile(e.target.files?.[0] || null)
+          }
           style={{ marginBottom: '20px' }}
         />
 
@@ -292,7 +385,9 @@ function UserUpload() {
             padding: '12px 25px',
             border: 'none',
             borderRadius: '8px',
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: loading
+              ? 'not-allowed'
+              : 'pointer',
             fontSize: '18px',
           }}
         >

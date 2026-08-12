@@ -12,6 +12,7 @@ const sectionLabels = {
   ppt: 'عروض PPT',
   tests: 'فروض',
   exams: 'اختبارات',
+  bem: 'مواضيع BEM',
   exercises: 'تمارين ووضعيات',
   summaries: 'ملخصات',
   draw: 'رسومات صماء',
@@ -27,6 +28,7 @@ const pdfSections = [
   'pdf',
   'tests',
   'exams',
+  'bem',
   'exercises',
   'summaries',
   'charts',
@@ -36,6 +38,10 @@ const pdfSections = [
   'annual_progression',
   'monthly_distribution',
 ]
+
+function makeTopicTitle(topicNumber) {
+  return `الموضوع رقم ${String(topicNumber).padStart(2, '0')}`
+}
 
 function AdminUserUploads() {
   const [items, setItems] = useState([])
@@ -62,10 +68,6 @@ function AdminUserUploads() {
     }
 
     setLoading(false)
-  }
-
-  function getStoragePath(fileUrl) {
-    return fileUrl || null
   }
 
   function isR2File(fileUrl) {
@@ -97,7 +99,9 @@ function AdminUserUploads() {
     try {
       await fetch('/.netlify/functions/send-notification', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           type,
           toEmail: item.user_email,
@@ -112,7 +116,7 @@ function AdminUserUploads() {
 
   async function handleApprove(item) {
     const ok = window.confirm(
-      `هل تريد قبول هذا الملف وإضافته للموقع؟\nالعنوان: "${item.title}"`
+      `هل تريد قبول هذا الملف وإضافته للموقع؟\nالعنوان الحالي: "${item.title}"`
     )
 
     if (!ok) return
@@ -124,7 +128,58 @@ function AdminUserUploads() {
       let video = ''
       let ppt = ''
 
-      const filePath = getStoragePath(item.file_url)
+      let lessonTitle = item.title?.trim() || 'بدون عنوان'
+
+      const isTopic =
+        item.section === 'tests' || item.section === 'exams'
+
+      if (isTopic) {
+        if (!item.term) {
+          alert(
+            'هذا الملف تابع للفروض أو الاختبارات، لكنه لا يحتوي على فصل'
+          )
+          return
+        }
+
+        const { data: topicNumber, error: counterError } =
+          await supabase.rpc('next_topic_number', {
+            p_level: item.level,
+            p_section: item.section,
+            p_term: item.term,
+          })
+
+        if (counterError) {
+          console.error(
+            'ERROR getting next topic number:',
+            counterError
+          )
+
+          alert(
+            `تعذر الحصول على رقم الموضوع التالي: ${counterError.message}`
+          )
+          return
+        }
+
+        lessonTitle = makeTopicTitle(topicNumber)
+      } else {
+        const editedTitle = window.prompt(
+          'عدّل عنوان الملف الذي سيظهر في الموقع:',
+          lessonTitle
+        )
+
+        if (editedTitle === null) {
+          return
+        }
+
+        if (!editedTitle.trim()) {
+          alert('عنوان الملف لا يمكن أن يكون فارغًا')
+          return
+        }
+
+        lessonTitle = editedTitle.trim()
+      }
+
+      const filePath = item.file_url || null
 
       if (pdfSections.includes(item.section)) {
         pdf = filePath
@@ -145,7 +200,7 @@ function AdminUserUploads() {
         .from('lessons')
         .insert([
           {
-            title: item.title,
+            title: lessonTitle,
             level: item.level,
             section: item.section,
             term: item.term || null,
@@ -160,7 +215,10 @@ function AdminUserUploads() {
 
       if (insertError) {
         console.error('ERROR inserting into lessons:', insertError)
-        alert('وقع خطأ أثناء إضافة الملف إلى الدروس')
+
+        alert(
+          `وقع خطأ أثناء إضافة الملف إلى الدروس: ${insertError.message}`
+        )
         return
       }
 
@@ -170,16 +228,29 @@ function AdminUserUploads() {
         .eq('id', item.id)
 
       if (updateError) {
-        console.error('ERROR updating user_uploads:', updateError)
-        alert('تمت إضافة الملف للدروس لكن لم يتم تحديث حالة الطلب')
+        console.error(
+          'ERROR updating user_uploads:',
+          updateError
+        )
+
+        alert(
+          'تمت إضافة الملف للدروس لكن لم يتم تحديث حالة الطلب'
+        )
         return
       }
 
-      await notifyUser('approved', item)
+      await notifyUser('approved', {
+        ...item,
+        title: lessonTitle,
+      })
 
       setItems(prev => prev.filter(i => i.id !== item.id))
 
-      alert('تم قبول الملف وإضافته للموقع بنجاح')
+      alert(
+        isTopic
+          ? `تم قبول الملف بنجاح باسم: ${lessonTitle}`
+          : `تم قبول الملف بنجاح باسم: ${lessonTitle}`
+      )
     } catch (err) {
       console.error('APPROVE ERROR:', err)
       alert('وقع خطأ غير متوقع أثناء قبول الملف')
@@ -199,12 +270,10 @@ function AdminUserUploads() {
     )
 
     try {
-      const filePath = getStoragePath(item.file_url)
-
-      if (filePath && !isR2File(filePath)) {
+      if (item.file_url && !isR2File(item.file_url)) {
         const { error: storageError } = await supabase.storage
           .from('user-files')
-          .remove([filePath])
+          .remove([item.file_url])
 
         if (storageError) {
           console.error(
@@ -227,6 +296,7 @@ function AdminUserUploads() {
           'ERROR updating user_uploads (reject):',
           updateError
         )
+
         alert('وقع خطأ أثناء تحديث حالة الطلب')
         return
       }
@@ -293,8 +363,10 @@ function AdminUserUploads() {
                 <tr key={item.id}>
                   <td>{item.title}</td>
                   <td>{item.level}</td>
+
                   <td>
-                    {sectionLabels[item.section] || item.section}
+                    {sectionLabels[item.section] ||
+                      item.section}
                   </td>
 
                   <td>
@@ -335,7 +407,6 @@ function AdminUserUploads() {
                         borderRadius: '6px',
                         cursor: 'pointer',
                         marginRight: '8px',
-                        width: 'auto',
                       }}
                       onClick={() => handleApprove(item)}
                     >
@@ -350,7 +421,6 @@ function AdminUserUploads() {
                         padding: '6px 10px',
                         borderRadius: '6px',
                         cursor: 'pointer',
-                        width: 'auto',
                       }}
                       onClick={() => handleReject(item)}
                     >
