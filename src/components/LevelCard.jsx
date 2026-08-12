@@ -6,7 +6,6 @@ import third from "../assets/third.png";
 import fourth from "../assets/fourth.png";
 
 function LevelCard({ title, path }) {
-
   let image = first;
   let color = "#2e7d32";
   let background = "#e8f5e9";
@@ -32,19 +31,22 @@ function LevelCard({ title, path }) {
   return (
     <Link
       to={path}
-      className="card"
+      className="card level-card"
       style={{
         borderTop: `8px solid ${color}`,
-        background: background,
-        textDecoration: "none"
+        background,
+        textDecoration: "none",
       }}
     >
-      <img src={image} alt={title} className="level-image" />
+      <img
+        src={image}
+        alt={title}
+        className="level-image"
+      />
 
       <h2 style={{ color }}>
         {title}
       </h2>
-
     </Link>
   );
 }

@@ -57,3 +57,24 @@ body{
     border-radius:10px;
     max-width:100%;
 }
+.level-card {
+  height: auto !important;
+  min-height: 0 !important;
+  display: block !important;
+  overflow: hidden;
+  padding-bottom: 18px !important;
+}
+
+.level-card .level-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 !important;
+}
+
+.level-card h2 {
+  margin: 18px 12px 0 !important;
+  padding: 0 !important;
+  line-height: 1.35;
+  text-align: center;
+}
