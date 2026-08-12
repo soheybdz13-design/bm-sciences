@@ -46,13 +46,23 @@ const sectionConfig = {
     column: 'video',
     extensions: ['mp4', 'webm', 'mov', 'zip', 'rar'],
   },
+
   ppt: {
-    label: 'عروض PowerPoint أو ملفات مضغوطة',
+    label:
+      'عروض PowerPoint أو PPS أو ملفات مضغوطة',
     accept:
-      `.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,${ARCHIVE_ACCEPT}`,
+      `.ppt,.pptx,.pps,.ppsx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.slideshow,${ARCHIVE_ACCEPT}`,
     column: 'ppt',
-    extensions: ['ppt', 'pptx', 'zip', 'rar'],
+    extensions: [
+      'ppt',
+      'pptx',
+      'pps',
+      'ppsx',
+      'zip',
+      'rar',
+    ],
   },
+
   tests: {
     label: 'ملفات PDF للفروض',
     accept: '.pdf,application/pdf',
@@ -72,7 +82,8 @@ const sectionConfig = {
     extensions: ['pdf', 'zip', 'rar'],
   },
   exercises: {
-    label: 'ملفات PDF أو ملفات مضغوطة للتمارين والوضعيات',
+    label:
+      'ملفات PDF أو ملفات مضغوطة للتمارين والوضعيات',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
@@ -84,7 +95,8 @@ const sectionConfig = {
     extensions: ['pdf', 'zip', 'rar'],
   },
   draw: {
-    label: 'صور الرسومات الصماء أو ملفات مضغوطة',
+    label:
+      'صور الرسومات الصماء أو ملفات مضغوطة',
     accept: `image/*,${ARCHIVE_ACCEPT}`,
     column: 'image',
     extensions: [
@@ -116,19 +128,22 @@ const sectionConfig = {
     extensions: ['pdf', 'zip', 'rar'],
   },
   support: {
-    label: 'ملفات PDF أو ملفات مضغوطة للمعالجة البيداغوجية',
+    label:
+      'ملفات PDF أو ملفات مضغوطة للمعالجة البيداغوجية',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
   annual_progression: {
-    label: 'ملفات PDF أو ملفات مضغوطة للتدرج السنوي',
+    label:
+      'ملفات PDF أو ملفات مضغوطة للتدرج السنوي',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
   monthly_distribution: {
-    label: 'ملفات PDF أو ملفات مضغوطة للتوزيع الشهري',
+    label:
+      'ملفات PDF أو ملفات مضغوطة للتوزيع الشهري',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
@@ -304,7 +319,8 @@ function Admin() {
       item => item.success
     ).length
 
-    const failedCount = uploadResults.length - successCount
+    const failedCount =
+      uploadResults.length - successCount
 
     setLoading(false)
     setProgress(null)
@@ -453,7 +469,9 @@ function Admin() {
                 accept={currentConfig.accept}
                 disabled={loading}
                 onChange={e => {
-                  setFiles(Array.from(e.target.files || []))
+                  setFiles(
+                    Array.from(e.target.files || [])
+                  )
                   setResults([])
                 }}
               />
@@ -502,7 +520,9 @@ function Admin() {
               padding: '12px 25px',
               border: 'none',
               borderRadius: '8px',
-              cursor: loading ? 'not-allowed' : 'pointer',
+              cursor: loading
+                ? 'not-allowed'
+                : 'pointer',
               fontSize: '18px',
             }}
           >
