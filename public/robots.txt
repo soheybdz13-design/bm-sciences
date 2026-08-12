@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bm-sciences.netlify.app/sitemap.xml
