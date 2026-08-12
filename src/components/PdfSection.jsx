@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  SpecialZoomLevel,
   Viewer,
   Worker,
 } from '@react-pdf-viewer/core'
@@ -9,26 +8,10 @@ import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout'
 import '@react-pdf-viewer/core/lib/styles/index.css'
 import '@react-pdf-viewer/default-layout/lib/styles/index.css'
 
-const R2_WORKER_URL =
-  'https://bm-sciences-upload.soheybdz13.workers.dev'
+import { getFileUrl, isArchiveFile } from '../utils/fileUrl'
 
 const PDF_WORKER_URL =
   'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
-
-function getPdfUrl(pdf) {
-  if (!pdf) return null
-
-  if (pdf.startsWith('uploads/')) {
-    const encodedPath = pdf
-      .split('/')
-      .map(part => encodeURIComponent(part))
-      .join('/')
-
-    return `${R2_WORKER_URL}/files/${encodedPath}`
-  }
-
-  return pdf
-}
 
 function PdfViewer({ pdfUrl }) {
   const defaultLayoutPluginInstance = defaultLayoutPlugin()
@@ -105,7 +88,11 @@ function PdfSection({ lessons }) {
     <>
       <div style={{ marginTop: '20px', direction: 'rtl' }}>
         {lessons.map(lesson => {
-          const pdfUrl = getPdfUrl(lesson.pdf)
+          const archiveUrl = getFileUrl(lesson.archive)
+          const pdfUrl = getFileUrl(lesson.pdf)
+
+          const hasArchive =
+            archiveUrl && isArchiveFile(lesson.archive)
 
           return (
             <div
@@ -120,6 +107,7 @@ function PdfSection({ lessons }) {
                 color: '#fff',
                 borderRadius: '8px',
                 gap: '15px',
+                flexWrap: 'wrap',
               }}
             >
               <div
@@ -133,18 +121,20 @@ function PdfSection({ lessons }) {
                 <span
                   style={{
                     display: 'inline-block',
-                    width: '28px',
-                    minWidth: '28px',
+                    width: '40px',
+                    minWidth: '40px',
                     height: '28px',
                     borderRadius: '4px',
-                    background: '#b71c1c',
+                    background: hasArchive
+                      ? '#d97706'
+                      : '#b71c1c',
                     textAlign: 'center',
                     lineHeight: '28px',
                     fontWeight: 'bold',
-                    fontSize: '12px',
+                    fontSize: hasArchive ? '16px' : '12px',
                   }}
                 >
-                  PDF
+                  {hasArchive ? '📦' : 'PDF'}
                 </span>
 
                 <div style={{ minWidth: 0 }}>
@@ -169,15 +159,38 @@ function PdfSection({ lessons }) {
                       {lesson.subject}
                     </div>
                   )}
+
+                  {hasArchive && (
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        color: '#fbbf24',
+                        marginTop: '3px',
+                      }}
+                    >
+                      ملف مضغوط ZIP أو RAR
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {pdfUrl && (
+              {hasArchive ? (
+                <a
+                  href={archiveUrl}
+                  download
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lesson-btn"
+                >
+                  ⬇ تحميل الملف المضغوط
+                </a>
+              ) : pdfUrl ? (
                 <div
                   style={{
                     display: 'flex',
                     gap: '8px',
                     flexShrink: 0,
+                    flexWrap: 'wrap',
                   }}
                 >
                   <button
@@ -207,6 +220,15 @@ function PdfSection({ lessons }) {
                     ⬇ تحميل
                   </a>
                 </div>
+              ) : (
+                <span
+                  style={{
+                    color: '#bbb',
+                    fontSize: '14px',
+                  }}
+                >
+                  الملف غير متوفر
+                </span>
               )}
             </div>
           )

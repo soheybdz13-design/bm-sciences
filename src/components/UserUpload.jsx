@@ -7,6 +7,119 @@ const WORKER_URL =
 const TURNSTILE_SITE_KEY =
   '0x4AAAAAAEKSC4sa6IMYEu-1'
 
+const ARCHIVE_ACCEPT =
+  '.zip,.rar,application/zip,application/x-zip-compressed,application/vnd.rar,application/x-rar-compressed,application/octet-stream'
+
+const sectionConfig = {
+  pdf: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  word: {
+    label: 'Word أو ملف ZIP / RAR',
+    accept:
+      `.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,${ARCHIVE_ACCEPT}`,
+    extensions: ['doc', 'docx', 'zip', 'rar'],
+  },
+  print: {
+    label: 'صورة أو ملف ZIP / RAR',
+    accept: `image/*,${ARCHIVE_ACCEPT}`,
+    extensions: [
+      'jpg',
+      'jpeg',
+      'png',
+      'webp',
+      'gif',
+      'zip',
+      'rar',
+    ],
+  },
+  videos: {
+    label: 'فيديو أو ملف ZIP / RAR',
+    accept: `video/*,${ARCHIVE_ACCEPT}`,
+    extensions: ['mp4', 'webm', 'mov', 'zip', 'rar'],
+  },
+  ppt: {
+    label: 'عرض PPT أو ملف ZIP / RAR',
+    accept:
+      `.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,${ARCHIVE_ACCEPT}`,
+    extensions: ['ppt', 'pptx', 'zip', 'rar'],
+  },
+  tests: {
+    label: 'ملف PDF فقط',
+    accept: '.pdf,application/pdf',
+    extensions: ['pdf'],
+  },
+  exams: {
+    label: 'ملف PDF فقط',
+    accept: '.pdf,application/pdf',
+    extensions: ['pdf'],
+  },
+  bem: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  exercises: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  summaries: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  draw: {
+    label: 'صورة أو ملف ZIP / RAR',
+    accept: `image/*,${ARCHIVE_ACCEPT}`,
+    extensions: [
+      'jpg',
+      'jpeg',
+      'png',
+      'webp',
+      'gif',
+      'zip',
+      'rar',
+    ],
+  },
+  charts: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  program: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  guide: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  support: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  annual_progression: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+  monthly_distribution: {
+    label: 'PDF أو ملف ZIP / RAR',
+    accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
+    extensions: ['pdf', 'zip', 'rar'],
+  },
+}
+
+function getFileExtension(fileName) {
+  return fileName.split('.').pop()?.toLowerCase() || ''
+}
+
 function UserUpload() {
   const [title, setTitle] = useState('')
   const [level, setLevel] = useState('')
@@ -25,8 +138,7 @@ function UserUpload() {
   const needsTerm =
     section === 'tests' || section === 'exams'
 
-  const isPdfOnly =
-    needsTerm || section === 'bem'
+  const currentConfig = sectionConfig[section]
 
   useEffect(() => {
     function renderTurnstile() {
@@ -108,13 +220,20 @@ function UserUpload() {
     }
 
     if (!file) {
-      alert('اختر ملفًا واحدًا على الأقل')
+      alert('اختر ملفًا واحدًا')
       return
     }
 
-    if (isPdfOnly && file.type !== 'application/pdf') {
+    if (!currentConfig) {
+      alert('القسم المختار غير صالح')
+      return
+    }
+
+    const extension = getFileExtension(file.name)
+
+    if (!currentConfig.extensions.includes(extension)) {
       alert(
-        'الفروض والاختبارات ومواضيع BEM يجب أن تكون في ملف PDF'
+        `هذا الملف لا يناسب القسم المختار.\nالمسموح: ${currentConfig.label}`
       )
       return
     }
@@ -351,25 +470,34 @@ function UserUpload() {
             marginBottom: '5px',
           }}
         >
-          {isPdfOnly
-            ? 'اختر ملف PDF'
-            : 'اختر الملف: PDF أو Word أو صورة أو فيديو أو عرض PPT'}
+          {currentConfig
+            ? `اختر الملف: ${currentConfig.label}`
+            : 'اختر القسم أولًا'}
         </label>
 
         <input
           key={fileInputKey}
           type="file"
-          accept={
-            isPdfOnly
-              ? '.pdf,application/pdf'
-              : '.pdf,.doc,.docx,.ppt,.pptx,image/*,video/*'
-          }
-          disabled={loading}
+          accept={currentConfig?.accept || '*/*'}
+          disabled={loading || !currentConfig}
           onChange={e =>
             setFile(e.target.files?.[0] || null)
           }
           style={{ marginBottom: '20px' }}
         />
+
+        {file && (
+          <p
+            style={{
+              marginTop: '-10px',
+              marginBottom: '15px',
+              color: '#1b5e20',
+              wordBreak: 'break-word',
+            }}
+          >
+            الملف المختار: {file.name}
+          </p>
+        )}
 
         <div
           ref={turnstileRef}

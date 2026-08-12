@@ -1,32 +1,42 @@
-const R2_WORKER_URL =
-  'https://bm-sciences-upload.soheybdz13.workers.dev'
-
-function getPptUrl(ppt) {
-  if (!ppt) return null
-
-  if (ppt.startsWith('uploads/')) {
-    const encodedPath = ppt
-      .split('/')
-      .map(part => encodeURIComponent(part))
-      .join('/')
-
-    return `${R2_WORKER_URL}/files/${encodedPath}`
-  }
-
-  return ppt
-}
+import { getFileUrl, isArchiveFile } from '../utils/fileUrl'
 
 function PptSection({ lessons }) {
   return (
     <div className="sections-grid">
       {lessons.map(lesson => {
-        const pptUrl = getPptUrl(lesson.ppt)
+        const archiveUrl = getFileUrl(lesson.archive)
+        const pptUrl = getFileUrl(lesson.ppt)
+        const hasArchive = archiveUrl && isArchiveFile(lesson.archive)
 
         return (
           <div className="section-card" key={lesson.id}>
             <h3>{lesson.title}</h3>
 
-            {pptUrl ? (
+            {hasArchive ? (
+              <div style={{ marginTop: '16px' }}>
+                <p
+                  style={{
+                    marginBottom: '14px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  📦 ملف مضغوط
+                </p>
+
+                <a
+                  href={archiveUrl}
+                  download
+                  className="lesson-btn"
+                  style={{
+                    display: 'inline-block',
+                    textDecoration: 'none',
+                  }}
+                >
+                  ⬇ تحميل الملف المضغوط
+                </a>
+              </div>
+            ) : pptUrl ? (
               <a
                 href={pptUrl}
                 target="_blank"

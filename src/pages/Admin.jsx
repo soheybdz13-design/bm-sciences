@@ -6,38 +6,52 @@ import AdminUserUploads from '../components/AdminUserUploads'
 import { supabase } from '../lib/supabaseClient'
 import { uploadToR2 } from '../services/uploadToR2'
 
+const ARCHIVE_ACCEPT =
+  '.zip,.rar,application/zip,application/x-zip-compressed,application/vnd.rar,application/x-rar-compressed,application/octet-stream'
+
+const PDF_ARCHIVE_ACCEPT =
+  `.pdf,application/pdf,${ARCHIVE_ACCEPT}`
+
 const sectionConfig = {
   pdf: {
-    label: 'ملفات PDF',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   word: {
-    label: 'ملفات Word',
+    label: 'ملفات Word أو ملفات مضغوطة',
     accept:
-      '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      `.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,${ARCHIVE_ACCEPT}`,
     column: 'word',
-    extensions: ['doc', 'docx'],
+    extensions: ['doc', 'docx', 'zip', 'rar'],
   },
   print: {
-    label: 'صور المطبوعات',
-    accept: 'image/*',
+    label: 'صور المطبوعات أو ملفات مضغوطة',
+    accept: `image/*,${ARCHIVE_ACCEPT}`,
     column: 'image',
-    extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    extensions: [
+      'jpg',
+      'jpeg',
+      'png',
+      'webp',
+      'gif',
+      'zip',
+      'rar',
+    ],
   },
   videos: {
-    label: 'ملفات الفيديو',
-    accept: 'video/*',
+    label: 'ملفات الفيديو أو ملفات مضغوطة',
+    accept: `video/*,${ARCHIVE_ACCEPT}`,
     column: 'video',
-    extensions: ['mp4', 'webm', 'mov'],
+    extensions: ['mp4', 'webm', 'mov', 'zip', 'rar'],
   },
   ppt: {
-    label: 'عروض PowerPoint',
+    label: 'عروض PowerPoint أو ملفات مضغوطة',
     accept:
-      '.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      `.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,${ARCHIVE_ACCEPT}`,
     column: 'ppt',
-    extensions: ['ppt', 'pptx'],
+    extensions: ['ppt', 'pptx', 'zip', 'rar'],
   },
   tests: {
     label: 'ملفات PDF للفروض',
@@ -52,64 +66,72 @@ const sectionConfig = {
     extensions: ['pdf'],
   },
   bem: {
-    label: 'مواضيع BEM',
-    accept: '.pdf,application/pdf',
+    label: 'مواضيع BEM: PDF أو ملفات مضغوطة',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   exercises: {
-    label: 'ملفات PDF للتمارين والوضعيات',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة للتمارين والوضعيات',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   summaries: {
-    label: 'ملفات PDF للملخصات',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة للملخصات',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   draw: {
-    label: 'صور الرسومات الصماء',
-    accept: 'image/*',
+    label: 'صور الرسومات الصماء أو ملفات مضغوطة',
+    accept: `image/*,${ARCHIVE_ACCEPT}`,
     column: 'image',
-    extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    extensions: [
+      'jpg',
+      'jpeg',
+      'png',
+      'webp',
+      'gif',
+      'zip',
+      'rar',
+    ],
   },
   charts: {
-    label: 'ملفات PDF للمخططات',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة للمخططات',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   program: {
-    label: 'ملفات PDF للمنهاج',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة للمنهاج',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   guide: {
-    label: 'ملفات PDF للدليل',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة للدليل',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   support: {
-    label: 'ملفات PDF للمعالجة البيداغوجية',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة للمعالجة البيداغوجية',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   annual_progression: {
-    label: 'ملفات PDF للتدرج السنوي',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة للتدرج السنوي',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
   monthly_distribution: {
-    label: 'ملفات PDF للتوزيع الشهري',
-    accept: '.pdf,application/pdf',
+    label: 'ملفات PDF أو ملفات مضغوطة للتوزيع الشهري',
+    accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
-    extensions: ['pdf'],
+    extensions: ['pdf', 'zip', 'rar'],
   },
 }
 
@@ -123,6 +145,10 @@ function getTitleFromFileName(fileName) {
 
 function makeTopicTitle(topicNumber) {
   return `الموضوع رقم ${String(topicNumber).padStart(2, '0')}`
+}
+
+function isArchiveFile(fileName) {
+  return /\.(zip|rar)$/i.test(fileName || '')
 }
 
 function Admin() {
@@ -237,10 +263,15 @@ function Admin() {
           word: '',
           video: '',
           ppt: '',
+          archive: '',
           youtube: youtubeUrl || null,
         }
 
-        lesson[currentConfig.column] = fileUrl
+        if (isArchiveFile(file.name)) {
+          lesson.archive = fileUrl
+        } else {
+          lesson[currentConfig.column] = fileUrl
+        }
 
         const { error } = await supabase
           .from('lessons')
