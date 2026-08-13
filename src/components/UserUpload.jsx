@@ -10,6 +10,9 @@ const TURNSTILE_SITE_KEY =
 const ARCHIVE_ACCEPT =
   '.zip,.rar,application/zip,application/x-zip-compressed,application/vnd.rar,application/x-rar-compressed,application/octet-stream'
 
+const DOCUMENT_ACCEPT =
+  `.pdf,.doc,.docx,.ppt,.pptx,.pps,.ppsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.slideshow,${ARCHIVE_ACCEPT}`
+
 const sectionConfig = {
   pdf: {
     label: 'PDF أو ملف ZIP / RAR',
@@ -23,14 +26,22 @@ const sectionConfig = {
     extensions: ['doc', 'docx', 'zip', 'rar'],
   },
   print: {
-    label: 'صورة أو ملف ZIP / RAR',
-    accept: `image/*,${ARCHIVE_ACCEPT}`,
+    label:
+      'صورة أو PDF أو Word أو PowerPoint أو ZIP / RAR',
+    accept: `image/*,${DOCUMENT_ACCEPT}`,
     extensions: [
       'jpg',
       'jpeg',
       'png',
       'webp',
       'gif',
+      'pdf',
+      'doc',
+      'docx',
+      'ppt',
+      'pptx',
+      'pps',
+      'ppsx',
       'zip',
       'rar',
     ],
@@ -41,10 +52,17 @@ const sectionConfig = {
     extensions: ['mp4', 'webm', 'mov', 'zip', 'rar'],
   },
   ppt: {
-    label: 'عرض PPT أو ملف ZIP / RAR',
+    label: 'عرض PPT أو PPS أو ملف ZIP / RAR',
     accept:
-      `.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,${ARCHIVE_ACCEPT}`,
-    extensions: ['ppt', 'pptx', 'zip', 'rar'],
+      `.ppt,.pptx,.pps,.ppsx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.slideshow,${ARCHIVE_ACCEPT}`,
+    extensions: [
+      'ppt',
+      'pptx',
+      'pps',
+      'ppsx',
+      'zip',
+      'rar',
+    ],
   },
   tests: {
     label: 'ملف PDF فقط',
@@ -103,6 +121,22 @@ const sectionConfig = {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
+  },
+  teacher_documents: {
+    label:
+      'وثائق الأستاذ: PDF أو Word أو PowerPoint أو ZIP / RAR',
+    accept: DOCUMENT_ACCEPT,
+    extensions: [
+      'pdf',
+      'doc',
+      'docx',
+      'ppt',
+      'pptx',
+      'pps',
+      'ppsx',
+      'zip',
+      'rar',
+    ],
   },
   annual_progression: {
     label: 'PDF أو ملف ZIP / RAR',
@@ -288,8 +322,6 @@ function UserUpload() {
         ])
 
       if (error) {
-        console.error('ERROR saving user upload:', error)
-
         throw new Error(
           error.message ||
             'تم رفع الملف لكن وقع خطأ أثناء حفظ بياناته'
@@ -351,11 +383,20 @@ function UserUpload() {
           value={level}
           disabled={loading}
           onChange={e => {
-            setLevel(e.target.value)
+            const selectedLevel = e.target.value
+
+            setLevel(selectedLevel)
 
             if (
-              e.target.value !== 'fourth' &&
+              selectedLevel !== 'fourth' &&
               section === 'bem'
+            ) {
+              setSection('')
+            }
+
+            if (
+              selectedLevel !== 'first' &&
+              section === 'support'
             ) {
               setSection('')
             }
@@ -407,17 +448,31 @@ function UserUpload() {
           <option value="exercises">
             تمارين ووضعيات
           </option>
+
           <option value="summaries">ملخصات</option>
+
           <option value="draw">رسومات صماء</option>
+
           <option value="charts">مخططات</option>
+
           <option value="program">المنهاج</option>
+
           <option value="guide">الدليل</option>
-          <option value="support">
-            المعالجة البيداغوجية
+
+          <option value="teacher_documents">
+            وثائق الأستاذ
           </option>
+
+          {level === 'first' && (
+            <option value="support">
+              المعالجة البيداغوجية
+            </option>
+          )}
+
           <option value="annual_progression">
             التدرج السنوي
           </option>
+
           <option value="monthly_distribution">
             التوزيع الشهري
           </option>

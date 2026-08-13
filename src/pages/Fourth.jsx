@@ -14,9 +14,9 @@ import {
   FaSitemap,
   FaBook,
   FaBookOpen,
-  FaTools,
   FaPencilAlt,
   FaListAlt,
+  FaFolderOpen,
 } from 'react-icons/fa'
 
 function Fourth() {
@@ -92,9 +92,9 @@ function Fourth() {
       path: '/fourth/guide',
     },
     {
-      title: 'المعالجة البيداغوجية',
-      icon: <FaTools />,
-      path: '/fourth/support',
+      title: 'وثائق الأستاذ',
+      icon: <FaFolderOpen />,
+      path: '/fourth/teacher_documents',
     },
     {
       title: 'التدرج السنوي',

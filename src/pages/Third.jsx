@@ -14,23 +14,43 @@ import {
   FaSitemap,
   FaBook,
   FaBookOpen,
-  FaTools,
   FaPencilAlt,
   FaListAlt,
+  FaFolderOpen,
 } from 'react-icons/fa'
 
 function Third() {
   const sections = [
-    { title: 'مذكرات PDF', icon: <FaFilePdf />, path: '/third/pdf' },
-    { title: 'مذكرات Word', icon: <FaFileWord />, path: '/third/word' },
-    { title: 'مطبوعات', icon: <FaPrint />, path: '/third/print' },
-    { title: 'فيديوهات', icon: <FaVideo />, path: '/third/videos' },
+    {
+      title: 'مذكرات PDF',
+      icon: <FaFilePdf />,
+      path: '/third/pdf',
+    },
+    {
+      title: 'مذكرات Word',
+      icon: <FaFileWord />,
+      path: '/third/word',
+    },
+    {
+      title: 'مطبوعات',
+      icon: <FaPrint />,
+      path: '/third/print',
+    },
+    {
+      title: 'فيديوهات',
+      icon: <FaVideo />,
+      path: '/third/videos',
+    },
     {
       title: 'عروض PPT',
       icon: <FaFilePowerpoint />,
       path: '/third/ppt',
     },
-    { title: 'فروض', icon: <FaClipboard />, path: '/third/tests' },
+    {
+      title: 'فروض',
+      icon: <FaClipboard />,
+      path: '/third/tests',
+    },
     {
       title: 'اختبارات',
       icon: <FaClipboardCheck />,
@@ -67,9 +87,9 @@ function Third() {
       path: '/third/guide',
     },
     {
-      title: 'المعالجة البيداغوجية',
-      icon: <FaTools />,
-      path: '/third/support',
+      title: 'وثائق الأستاذ',
+      icon: <FaFolderOpen />,
+      path: '/third/teacher_documents',
     },
     {
       title: 'التدرج السنوي',

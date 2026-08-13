@@ -16,18 +16,47 @@ import {
   FaTools,
   FaPencilAlt,
   FaListAlt,
+  FaFolderOpen,
 } from 'react-icons/fa'
 import { FaFilePowerpoint } from 'react-icons/fa'
 
 function First() {
   const sections = [
-    { title: 'مذكرات PDF', icon: <FaFilePdf />, path: '/first/pdf' },
-    { title: 'مذكرات Word', icon: <FaFileWord />, path: '/first/word' },
-    { title: 'مطبوعات', icon: <FaPrint />, path: '/first/print' },
-    { title: 'فيديوهات', icon: <FaVideo />, path: '/first/videos' },
-    { title: 'عروض PPT', icon: <FaFilePowerpoint />, path: '/first/ppt' },
-    { title: 'فروض', icon: <FaClipboard />, path: '/first/tests' },
-    { title: 'اختبارات', icon: <FaClipboardCheck />, path: '/first/exams' },
+    {
+      title: 'مذكرات PDF',
+      icon: <FaFilePdf />,
+      path: '/first/pdf',
+    },
+    {
+      title: 'مذكرات Word',
+      icon: <FaFileWord />,
+      path: '/first/word',
+    },
+    {
+      title: 'مطبوعات',
+      icon: <FaPrint />,
+      path: '/first/print',
+    },
+    {
+      title: 'فيديوهات',
+      icon: <FaVideo />,
+      path: '/first/videos',
+    },
+    {
+      title: 'عروض PPT',
+      icon: <FaFilePowerpoint />,
+      path: '/first/ppt',
+    },
+    {
+      title: 'فروض',
+      icon: <FaClipboard />,
+      path: '/first/tests',
+    },
+    {
+      title: 'اختبارات',
+      icon: <FaClipboardCheck />,
+      path: '/first/exams',
+    },
     {
       title: 'تمارين ووضعيات',
       icon: <FaPencilAlt />,
@@ -38,10 +67,31 @@ function First() {
       icon: <FaListAlt />,
       path: '/first/summaries',
     },
-    { title: 'رسومات صماء', icon: <FaImage />, path: '/first/draw' },
-    { title: 'مخططات', icon: <FaSitemap />, path: '/first/charts' },
-    { title: 'المنهاج', icon: <FaBook />, path: '/first/program' },
-    { title: 'الدليل', icon: <FaBookOpen />, path: '/first/guide' },
+    {
+      title: 'رسومات صماء',
+      icon: <FaImage />,
+      path: '/first/draw',
+    },
+    {
+      title: 'مخططات',
+      icon: <FaSitemap />,
+      path: '/first/charts',
+    },
+    {
+      title: 'المنهاج',
+      icon: <FaBook />,
+      path: '/first/program',
+    },
+    {
+      title: 'الدليل',
+      icon: <FaBookOpen />,
+      path: '/first/guide',
+    },
+    {
+      title: 'وثائق الأستاذ',
+      icon: <FaFolderOpen />,
+      path: '/first/teacher_documents',
+    },
     {
       title: 'المعالجة البيداغوجية',
       icon: <FaTools />,
@@ -69,9 +119,9 @@ function First() {
         </h1>
 
         <div className="sections-grid first-level">
-          {sections.map((item, index) => (
+          {sections.map(item => (
             <Link
-              key={index}
+              key={item.path}
               to={item.path}
               className="section-card"
             >

@@ -14,23 +14,43 @@ import {
   FaSitemap,
   FaBook,
   FaBookOpen,
-  FaTools,
   FaPencilAlt,
   FaListAlt,
+  FaFolderOpen,
 } from 'react-icons/fa'
 
 function Second() {
   const sections = [
-    { title: 'مذكرات PDF', icon: <FaFilePdf />, path: '/second/pdf' },
-    { title: 'مذكرات Word', icon: <FaFileWord />, path: '/second/word' },
-    { title: 'مطبوعات', icon: <FaPrint />, path: '/second/print' },
-    { title: 'فيديوهات', icon: <FaVideo />, path: '/second/videos' },
+    {
+      title: 'مذكرات PDF',
+      icon: <FaFilePdf />,
+      path: '/second/pdf',
+    },
+    {
+      title: 'مذكرات Word',
+      icon: <FaFileWord />,
+      path: '/second/word',
+    },
+    {
+      title: 'مطبوعات',
+      icon: <FaPrint />,
+      path: '/second/print',
+    },
+    {
+      title: 'فيديوهات',
+      icon: <FaVideo />,
+      path: '/second/videos',
+    },
     {
       title: 'عروض PPT',
       icon: <FaFilePowerpoint />,
       path: '/second/ppt',
     },
-    { title: 'فروض', icon: <FaClipboard />, path: '/second/tests' },
+    {
+      title: 'فروض',
+      icon: <FaClipboard />,
+      path: '/second/tests',
+    },
     {
       title: 'اختبارات',
       icon: <FaClipboardCheck />,
@@ -67,9 +87,9 @@ function Second() {
       path: '/second/guide',
     },
     {
-      title: 'المعالجة البيداغوجية',
-      icon: <FaTools />,
-      path: '/second/support',
+      title: 'وثائق الأستاذ',
+      icon: <FaFolderOpen />,
+      path: '/second/teacher_documents',
     },
     {
       title: 'التدرج السنوي',

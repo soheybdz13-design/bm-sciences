@@ -20,6 +20,7 @@ const sectionLabels = {
   program: 'المنهاج',
   guide: 'الدليل',
   support: 'المعالجة البيداغوجية',
+  teacher_documents: 'وثائق الأستاذ',
   annual_progression: 'التدرج السنوي',
   monthly_distribution: 'التوزيع الشهري',
 }
@@ -41,6 +42,39 @@ const pdfSections = [
 
 function makeTopicTitle(topicNumber) {
   return `الموضوع رقم ${String(topicNumber).padStart(2, '0')}`
+}
+
+function getFileExtension(filePath = '') {
+  return filePath
+    .split('/')
+    .pop()
+    ?.split('.')
+    .pop()
+    ?.toLowerCase() || ''
+}
+
+function isArchiveFile(filePath) {
+  return /\.(zip|rar)$/i.test(filePath || '')
+}
+
+function isImageFile(filePath) {
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(
+    filePath || ''
+  )
+}
+
+function isWordFile(filePath) {
+  return /\.(doc|docx)$/i.test(filePath || '')
+}
+
+function isPptFile(filePath) {
+  return /\.(ppt|pptx|pps|ppsx)$/i.test(
+    filePath || ''
+  )
+}
+
+function isPdfFile(filePath) {
+  return /\.pdf$/i.test(filePath || '')
 }
 
 function AdminUserUploads() {
@@ -114,6 +148,42 @@ function AdminUserUploads() {
     }
   }
 
+  function assignFileToLesson(lesson, item, filePath) {
+    if (isArchiveFile(filePath)) {
+      lesson.archive = filePath
+      return
+    }
+
+    if (
+      item.section === 'print' ||
+      item.section === 'teacher_documents'
+    ) {
+      if (isImageFile(filePath)) {
+        lesson.image = filePath
+      } else if (isPdfFile(filePath)) {
+        lesson.pdf = filePath
+      } else if (isWordFile(filePath)) {
+        lesson.word = filePath
+      } else if (isPptFile(filePath)) {
+        lesson.ppt = filePath
+      }
+
+      return
+    }
+
+    if (pdfSections.includes(item.section)) {
+      lesson.pdf = filePath
+    } else if (item.section === 'word') {
+      lesson.word = filePath
+    } else if (item.section === 'draw') {
+      lesson.image = filePath
+    } else if (item.section === 'videos') {
+      lesson.video = filePath
+    } else if (item.section === 'ppt') {
+      lesson.ppt = filePath
+    }
+  }
+
   async function handleApprove(item) {
     const ok = window.confirm(
       `هل تريد قبول هذا الملف وإضافته للموقع؟\nالعنوان الحالي: "${item.title}"`
@@ -122,13 +192,8 @@ function AdminUserUploads() {
     if (!ok) return
 
     try {
-      let image = ''
-      let pdf = ''
-      let word = ''
-      let video = ''
-      let ppt = ''
-
-      let lessonTitle = item.title?.trim() || 'بدون عنوان'
+      let lessonTitle =
+        item.title?.trim() || 'بدون عنوان'
 
       const isTopic =
         item.section === 'tests' || item.section === 'exams'
@@ -149,11 +214,6 @@ function AdminUserUploads() {
           })
 
         if (counterError) {
-          console.error(
-            'ERROR getting next topic number:',
-            counterError
-          )
-
           alert(
             `تعذر الحصول على رقم الموضوع التالي: ${counterError.message}`
           )
@@ -167,9 +227,7 @@ function AdminUserUploads() {
           lessonTitle
         )
 
-        if (editedTitle === null) {
-          return
-        }
+        if (editedTitle === null) return
 
         if (!editedTitle.trim()) {
           alert('عنوان الملف لا يمكن أن يكون فارغًا')
@@ -181,43 +239,34 @@ function AdminUserUploads() {
 
       const filePath = item.file_url || null
 
-      if (pdfSections.includes(item.section)) {
-        pdf = filePath
-      } else if (item.section === 'word') {
-        word = filePath
-      } else if (
-        item.section === 'print' ||
-        item.section === 'draw'
-      ) {
-        image = filePath
-      } else if (item.section === 'videos') {
-        video = filePath
-      } else if (item.section === 'ppt') {
-        ppt = filePath
+      if (!filePath) {
+        alert('الملف غير موجود')
+        return
       }
+
+      const lesson = {
+        title: lessonTitle,
+        level: item.level,
+        section: item.section,
+        term: item.term || null,
+        image: '',
+        pdf: '',
+        word: '',
+        video: '',
+        ppt: '',
+        archive: '',
+        youtube: item.youtube || null,
+      }
+
+      assignFileToLesson(lesson, item, filePath)
 
       const { error: insertError } = await supabase
         .from('lessons')
-        .insert([
-          {
-            title: lessonTitle,
-            level: item.level,
-            section: item.section,
-            term: item.term || null,
-            image,
-            pdf,
-            word,
-            video,
-            ppt,
-            youtube: item.youtube || null,
-          },
-        ])
+        .insert([lesson])
 
       if (insertError) {
-        console.error('ERROR inserting into lessons:', insertError)
-
         alert(
-          `وقع خطأ أثناء إضافة الملف إلى الدروس: ${insertError.message}`
+          `وقع خطأ أثناء إضافة الملف للدروس: ${insertError.message}`
         )
         return
       }
@@ -228,11 +277,6 @@ function AdminUserUploads() {
         .eq('id', item.id)
 
       if (updateError) {
-        console.error(
-          'ERROR updating user_uploads:',
-          updateError
-        )
-
         alert(
           'تمت إضافة الملف للدروس لكن لم يتم تحديث حالة الطلب'
         )
@@ -244,13 +288,11 @@ function AdminUserUploads() {
         title: lessonTitle,
       })
 
-      setItems(prev => prev.filter(i => i.id !== item.id))
-
-      alert(
-        isTopic
-          ? `تم قبول الملف بنجاح باسم: ${lessonTitle}`
-          : `تم قبول الملف بنجاح باسم: ${lessonTitle}`
+      setItems(prev =>
+        prev.filter(i => i.id !== item.id)
       )
+
+      alert(`تم قبول الملف بنجاح باسم: ${lessonTitle}`)
     } catch (err) {
       console.error('APPROVE ERROR:', err)
       alert('وقع خطأ غير متوقع أثناء قبول الملف')
@@ -271,16 +313,9 @@ function AdminUserUploads() {
 
     try {
       if (item.file_url && !isR2File(item.file_url)) {
-        const { error: storageError } = await supabase.storage
+        await supabase.storage
           .from('user-files')
           .remove([item.file_url])
-
-        if (storageError) {
-          console.error(
-            'ERROR deleting old Supabase file:',
-            storageError
-          )
-        }
       }
 
       const { error: updateError } = await supabase
@@ -292,18 +327,15 @@ function AdminUserUploads() {
         .eq('id', item.id)
 
       if (updateError) {
-        console.error(
-          'ERROR updating user_uploads (reject):',
-          updateError
-        )
-
         alert('وقع خطأ أثناء تحديث حالة الطلب')
         return
       }
 
       await notifyUser('rejected', item, reason || '')
 
-      setItems(prev => prev.filter(i => i.id !== item.id))
+      setItems(prev =>
+        prev.filter(i => i.id !== item.id)
+      )
 
       alert('تم رفض الملف وحفظ سبب الرفض')
     } catch (err) {

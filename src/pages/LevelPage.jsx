@@ -47,6 +47,7 @@ function LevelPage() {
     program: 'المنهاج',
     guide: 'الدليل',
     support: 'المعالجة البيداغوجية',
+    teacher_documents: 'وثائق الأستاذ',
     annual_progression: 'التدرج السنوي',
     monthly_distribution: 'التوزيع الشهري',
   }
@@ -132,6 +133,7 @@ function LevelPage() {
 
       case 'print':
       case 'draw':
+      case 'teacher_documents':
         return <ImageSection lessons={lessons} />
 
       case 'ppt':
@@ -187,7 +189,7 @@ function LevelPage() {
             marginBottom: '35px',
           }}
         >
-          {names[section]}
+          {names[section] || 'قسم غير معروف'}
           {term ? ` - ${termNames[term]}` : ''}
         </h2>
 

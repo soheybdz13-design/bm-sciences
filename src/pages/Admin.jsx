@@ -12,6 +12,9 @@ const ARCHIVE_ACCEPT =
 const PDF_ARCHIVE_ACCEPT =
   `.pdf,application/pdf,${ARCHIVE_ACCEPT}`
 
+const DOCUMENT_ACCEPT =
+  `.pdf,.doc,.docx,.ppt,.pptx,.pps,.ppsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.slideshow,${ARCHIVE_ACCEPT}`
+
 const sectionConfig = {
   pdf: {
     label: 'ملفات PDF أو ملفات مضغوطة',
@@ -19,6 +22,7 @@ const sectionConfig = {
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   word: {
     label: 'ملفات Word أو ملفات مضغوطة',
     accept:
@@ -26,9 +30,10 @@ const sectionConfig = {
     column: 'word',
     extensions: ['doc', 'docx', 'zip', 'rar'],
   },
+
   print: {
-    label: 'صور المطبوعات أو ملفات مضغوطة',
-    accept: `image/*,${ARCHIVE_ACCEPT}`,
+    label: 'صور أو PDF أو Word أو PowerPoint أو ملفات مضغوطة',
+    accept: `image/*,${DOCUMENT_ACCEPT}`,
     column: 'image',
     extensions: [
       'jpg',
@@ -36,10 +41,18 @@ const sectionConfig = {
       'png',
       'webp',
       'gif',
+      'pdf',
+      'doc',
+      'docx',
+      'ppt',
+      'pptx',
+      'pps',
+      'ppsx',
       'zip',
       'rar',
     ],
   },
+
   videos: {
     label: 'ملفات الفيديو أو ملفات مضغوطة',
     accept: `video/*,${ARCHIVE_ACCEPT}`,
@@ -48,8 +61,7 @@ const sectionConfig = {
   },
 
   ppt: {
-    label:
-      'عروض PowerPoint أو PPS أو ملفات مضغوطة',
+    label: 'عروض PowerPoint أو PPS أو ملفات مضغوطة',
     accept:
       `.ppt,.pptx,.pps,.ppsx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.slideshow,${ARCHIVE_ACCEPT}`,
     column: 'ppt',
@@ -69,18 +81,21 @@ const sectionConfig = {
     column: 'pdf',
     extensions: ['pdf'],
   },
+
   exams: {
     label: 'ملفات PDF للاختبارات',
     accept: '.pdf,application/pdf',
     column: 'pdf',
     extensions: ['pdf'],
   },
+
   bem: {
     label: 'مواضيع BEM: PDF أو ملفات مضغوطة',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   exercises: {
     label:
       'ملفات PDF أو ملفات مضغوطة للتمارين والوضعيات',
@@ -88,15 +103,16 @@ const sectionConfig = {
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   summaries: {
     label: 'ملفات PDF أو ملفات مضغوطة للملخصات',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   draw: {
-    label:
-      'صور الرسومات الصماء أو ملفات مضغوطة',
+    label: 'صور الرسومات الصماء أو ملفات مضغوطة',
     accept: `image/*,${ARCHIVE_ACCEPT}`,
     column: 'image',
     extensions: [
@@ -109,24 +125,28 @@ const sectionConfig = {
       'rar',
     ],
   },
+
   charts: {
     label: 'ملفات PDF أو ملفات مضغوطة للمخططات',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   program: {
     label: 'ملفات PDF أو ملفات مضغوطة للمنهاج',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   guide: {
     label: 'ملفات PDF أو ملفات مضغوطة للدليل',
     accept: PDF_ARCHIVE_ACCEPT,
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   support: {
     label:
       'ملفات PDF أو ملفات مضغوطة للمعالجة البيداغوجية',
@@ -134,6 +154,25 @@ const sectionConfig = {
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
+  teacher_documents: {
+    label:
+      'وثائق الأستاذ: PDF أو Word أو PowerPoint أو ملفات مضغوطة',
+    accept: DOCUMENT_ACCEPT,
+    column: 'pdf',
+    extensions: [
+      'pdf',
+      'doc',
+      'docx',
+      'ppt',
+      'pptx',
+      'pps',
+      'ppsx',
+      'zip',
+      'rar',
+    ],
+  },
+
   annual_progression: {
     label:
       'ملفات PDF أو ملفات مضغوطة للتدرج السنوي',
@@ -141,6 +180,7 @@ const sectionConfig = {
     column: 'pdf',
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   monthly_distribution: {
     label:
       'ملفات PDF أو ملفات مضغوطة للتوزيع الشهري',
@@ -164,6 +204,49 @@ function makeTopicTitle(topicNumber) {
 
 function isArchiveFile(fileName) {
   return /\.(zip|rar)$/i.test(fileName || '')
+}
+
+function isImageFile(fileName) {
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(
+    fileName || ''
+  )
+}
+
+function isWordFile(fileName) {
+  return /\.(doc|docx)$/i.test(fileName || '')
+}
+
+function isPptFile(fileName) {
+  return /\.(ppt|pptx|pps|ppsx)$/i.test(fileName || '')
+}
+
+function isPdfFile(fileName) {
+  return /\.pdf$/i.test(fileName || '')
+}
+
+function assignFileToLesson(lesson, section, fileName, fileUrl) {
+  if (section === 'print' || section === 'teacher_documents') {
+    if (isImageFile(fileName)) {
+      lesson.image = fileUrl
+    } else if (isPdfFile(fileName)) {
+      lesson.pdf = fileUrl
+    } else if (isWordFile(fileName)) {
+      lesson.word = fileUrl
+    } else if (isPptFile(fileName)) {
+      lesson.ppt = fileUrl
+    } else if (isArchiveFile(fileName)) {
+      lesson.archive = fileUrl
+    }
+
+    return
+  }
+
+  if (isArchiveFile(fileName)) {
+    lesson.archive = fileUrl
+    return
+  }
+
+  lesson[sectionConfig[section].column] = fileUrl
 }
 
 function Admin() {
@@ -282,11 +365,12 @@ function Admin() {
           youtube: youtubeUrl || null,
         }
 
-        if (isArchiveFile(file.name)) {
-          lesson.archive = fileUrl
-        } else {
-          lesson[currentConfig.column] = fileUrl
-        }
+        assignFileToLesson(
+          lesson,
+          section,
+          file.name,
+          fileUrl
+        )
 
         const { error } = await supabase
           .from('lessons')
@@ -361,11 +445,20 @@ function Admin() {
             value={level}
             disabled={loading}
             onChange={e => {
-              setLevel(e.target.value)
+              const selectedLevel = e.target.value
+
+              setLevel(selectedLevel)
 
               if (
-                e.target.value !== 'fourth' &&
+                selectedLevel !== 'fourth' &&
                 section === 'bem'
+              ) {
+                setSection('')
+              }
+
+              if (
+                selectedLevel !== 'first' &&
+                section === 'support'
               ) {
                 setSection('')
               }
@@ -410,17 +503,31 @@ function Admin() {
             <option value="exercises">
               تمارين ووضعيات
             </option>
+
             <option value="summaries">ملخصات</option>
+
             <option value="draw">رسومات صماء</option>
+
             <option value="charts">مخططات</option>
+
             <option value="program">المنهاج</option>
+
             <option value="guide">الدليل</option>
-            <option value="support">
-              المعالجة البيداغوجية
+
+            <option value="teacher_documents">
+              وثائق الأستاذ
             </option>
+
+            {level === 'first' && (
+              <option value="support">
+                المعالجة البيداغوجية
+              </option>
+            )}
+
             <option value="annual_progression">
               التدرج السنوي
             </option>
+
             <option value="monthly_distribution">
               التوزيع الشهري
             </option>
