@@ -15,21 +15,23 @@ function Navbar({ toggleDark }) {
         </div>
       </div>
 
-      <nav className="nav-links">
-        <Link to="/">الرئيسية</Link>
-        <Link to="/about">من نحن</Link>
-        <Link to="/contact">اتصل بنا</Link>
-      </nav>
+      <div className="nav-actions">
+        <nav className="nav-links">
+          <Link to="/">الرئيسية</Link>
+          <Link to="/about">من نحن</Link>
+          <Link to="/contact">اتصل بنا</Link>
+        </nav>
 
-      <button
-        type="button"
-        className="dark-btn"
-        onClick={toggleDark}
-        aria-label="تبديل الوضع الليلي"
-        title="تبديل الوضع الليلي"
-      >
-        <FaMoon />
-      </button>
+        <button
+          type="button"
+          className="dark-btn"
+          onClick={toggleDark}
+          aria-label="تبديل الوضع الليلي"
+          title="تبديل الوضع الليلي"
+        >
+          <FaMoon />
+        </button>
+      </div>
     </header>
   );
 }
