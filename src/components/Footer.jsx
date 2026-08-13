@@ -1,27 +1,55 @@
+import { Link } from 'react-router-dom'
+
 function Footer() {
+  const linkStyle = {
+    color: '#ffffff',
+    textDecoration: 'none',
+    fontWeight: 'bold',
+  }
 
-return(
+  const separatorStyle = {
+    color: '#ffffff',
+    fontWeight: 'bold',
+  }
 
-<footer className="footer">
+  return (
+    <footer className="footer" dir="rtl">
+      <h3>BM Sciences</h3>
 
-<h3>BM Sciences</h3>
+      <p>
+        منصة تعليمية لعلوم الطبيعة والحياة
+      </p>
 
-<p>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px',
+          margin: '15px 0',
+        }}
+      >
+        <Link to="/privacy" style={linkStyle}>
+          سياسة الخصوصية
+        </Link>
 
-منصة تعليمية لعلوم الطبيعة والحياة
+        <span style={separatorStyle}>|</span>
 
-</p>
+        <Link to="/terms" style={linkStyle}>
+          شروط الاستخدام
+        </Link>
 
-<p>
+        <span style={separatorStyle}>|</span>
 
-© 2025 جميع الحقوق محفوظة
+        <Link to="/disclaimer" style={linkStyle}>
+          إخلاء المسؤولية
+        </Link>
+      </div>
 
-</p>
-
-</footer>
-
-)
-
+      <p>© 2026 جميع الحقوق محفوظة</p>
+    </footer>
+  )
 }
 
-export default Footer;
+export default Footer

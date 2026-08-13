@@ -1,7 +1,7 @@
-// src/App.jsx
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabaseClient'
+import './App.css'
 
 // الصفحات
 import Home from './pages/Home'
@@ -17,7 +17,11 @@ import LevelPage from './pages/LevelPage'
 import Lessons from './pages/Lessons'
 import AllLessons from './pages/AllLessons'
 import ResetPassword from './pages/ResetPassword'
-import "./App.css";
+
+// الصفحات القانونية
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
+import Disclaimer from './pages/Disclaimer'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -39,7 +43,11 @@ function App() {
   }, [])
 
   if (loading) {
-    return <h2 style={{ textAlign: 'center' }}>جاري التحميل...</h2>
+    return (
+      <h2 style={{ textAlign: 'center' }}>
+        جاري التحميل...
+      </h2>
+    )
   }
 
   return (
@@ -54,26 +62,39 @@ function App() {
       <Route path="/fourth" element={<Fourth />} />
 
       {/* صفحة الدروس حسب المستوى */}
-      <Route path="/lessons/:level" element={<Lessons />} />
+      <Route
+        path="/lessons/:level"
+        element={<Lessons />}
+      />
 
       {/* صفحة كل الدروس والملفات */}
-      <Route path="/all-lessons" element={<AllLessons />} />
-
-      {/* صفحة الأقسام حسب المستوى والقسم */}
-      <Route path="/:level/:section/:term" element={<LevelPage />} />
-      <Route path="/:level/:section" element={<LevelPage />} />
+      <Route
+        path="/all-lessons"
+        element={<AllLessons />}
+      />
 
       {/* الصفحات الأخرى */}
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
 
+      {/* الصفحات القانونية */}
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route
+        path="/disclaimer"
+        element={<Disclaimer />}
+      />
+
       {/* تسجيل الدخول للإدارة */}
       <Route path="/login" element={<Login />} />
 
-      {/* صفحة إعادة تعيين كلمة السر (من رابط Supabase) */}
-      <Route path="/reset-password" element={<ResetPassword />} />
+      {/* إعادة تعيين كلمة المرور */}
+      <Route
+        path="/reset-password"
+        element={<ResetPassword />}
+      />
 
-      {/* لوحة الإدارة محمية بالـ session من Supabase */}
+      {/* لوحة الإدارة */}
       <Route
         path="/admin"
         element={
@@ -84,6 +105,20 @@ function App() {
           )
         }
       />
+
+      {/* صفحات الأقسام والملفات */}
+      <Route
+        path="/:level/:section/:term"
+        element={<LevelPage />}
+      />
+
+      <Route
+        path="/:level/:section"
+        element={<LevelPage />}
+      />
+
+      {/* أي رابط غير موجود يرجع للرئيسية */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

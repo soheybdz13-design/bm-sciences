@@ -19,12 +19,14 @@ const sectionConfig = {
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   word: {
     label: 'Word أو ملف ZIP / RAR',
     accept:
       `.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,${ARCHIVE_ACCEPT}`,
     extensions: ['doc', 'docx', 'zip', 'rar'],
   },
+
   print: {
     label:
       'صورة أو PDF أو Word أو PowerPoint أو ZIP / RAR',
@@ -46,11 +48,13 @@ const sectionConfig = {
       'rar',
     ],
   },
+
   videos: {
     label: 'فيديو أو ملف ZIP / RAR',
     accept: `video/*,${ARCHIVE_ACCEPT}`,
     extensions: ['mp4', 'webm', 'mov', 'zip', 'rar'],
   },
+
   ppt: {
     label: 'عرض PPT أو PPS أو ملف ZIP / RAR',
     accept:
@@ -64,31 +68,37 @@ const sectionConfig = {
       'rar',
     ],
   },
+
   tests: {
     label: 'ملف PDF فقط',
     accept: '.pdf,application/pdf',
     extensions: ['pdf'],
   },
+
   exams: {
     label: 'ملف PDF فقط',
     accept: '.pdf,application/pdf',
     extensions: ['pdf'],
   },
+
   bem: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   exercises: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   summaries: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   draw: {
     label: 'صورة أو ملف ZIP / RAR',
     accept: `image/*,${ARCHIVE_ACCEPT}`,
@@ -102,26 +112,31 @@ const sectionConfig = {
       'rar',
     ],
   },
+
   charts: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   program: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   guide: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   support: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   teacher_documents: {
     label:
       'وثائق الأستاذ: PDF أو Word أو PowerPoint أو ZIP / RAR',
@@ -138,11 +153,13 @@ const sectionConfig = {
       'rar',
     ],
   },
+
   annual_progression: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
     extensions: ['pdf', 'zip', 'rar'],
   },
+
   monthly_distribution: {
     label: 'PDF أو ملف ZIP / RAR',
     accept: `.pdf,application/pdf,${ARCHIVE_ACCEPT}`,
@@ -165,6 +182,10 @@ function UserUpload() {
   const [turnstileToken, setTurnstileToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [fileInputKey, setFileInputKey] = useState(0)
+
+  // الموافقة على حقوق النشر وشروط رفع الملفات
+  const [acceptedUploadTerms, setAcceptedUploadTerms] =
+    useState(false)
 
   const turnstileRef = useRef(null)
   const widgetId = useRef(null)
@@ -272,6 +293,14 @@ function UserUpload() {
       return
     }
 
+    // يمنع رفع الملف إن لم يوافق المستخدم على الشروط
+    if (!acceptedUploadTerms) {
+      alert(
+        'يجب الموافقة على شروط رفع الملفات وحقوق النشر أولًا'
+      )
+      return
+    }
+
     if (!turnstileToken) {
       alert('أكمل التحقق الأمني ثم أعد المحاولة')
       return
@@ -338,6 +367,7 @@ function UserUpload() {
       setEmail('')
       setFile(null)
       setTurnstileToken('')
+      setAcceptedUploadTerms(false)
       setFileInputKey(prev => prev + 1)
 
       if (
@@ -553,6 +583,51 @@ function UserUpload() {
             الملف المختار: {file.name}
           </p>
         )}
+
+        {/* مربع الموافقة على شروط رفع الملفات */}
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            marginBottom: '20px',
+            padding: '12px',
+            background: '#f1f8f1',
+            border: '1px solid #c8e6c9',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            lineHeight: '1.8',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={acceptedUploadTerms}
+            disabled={loading}
+            onChange={e =>
+              setAcceptedUploadTerms(e.target.checked)
+            }
+            style={{
+              width: '18px',
+              height: '18px',
+              marginTop: '5px',
+              flexShrink: 0,
+            }}
+          />
+
+          <span>
+            أؤكد أنني أملك حقوق نشر هذا الملف أو لدي
+            إذن صريح بنشره، وأتعهد بعدم رفع محتوى مخالف
+            أو مسيء أو محمي بحقوق النشر دون إذن.
+            {' '}
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noreferrer"
+            >
+              اقرأ شروط الاستخدام
+            </a>
+          </span>
+        </label>
 
         <div
           ref={turnstileRef}
