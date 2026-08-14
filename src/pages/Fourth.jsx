@@ -92,7 +92,7 @@ function Fourth() {
       path: '/fourth/guide',
     },
     {
-      title: 'وثائق الأستاذ',
+      title: 'تقويم تشخيصي ووثائق أخرى',
       icon: <FaFolderOpen />,
       path: '/fourth/teacher_documents',
     },

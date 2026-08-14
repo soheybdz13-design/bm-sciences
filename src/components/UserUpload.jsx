@@ -139,7 +139,7 @@ const sectionConfig = {
 
   teacher_documents: {
     label:
-      'وثائق الأستاذ: PDF أو Word أو PowerPoint أو ZIP / RAR',
+      'تقويم تشخيصي ووثائق أخرى: PDF أو Word أو PowerPoint أو ZIP / RAR',
     accept: DOCUMENT_ACCEPT,
     extensions: [
       'pdf',
@@ -490,7 +490,7 @@ function UserUpload() {
           <option value="guide">الدليل</option>
 
           <option value="teacher_documents">
-            وثائق الأستاذ
+            تقويم تشخيصي ووثائق أخرى
           </option>
 
           {level === 'first' && (

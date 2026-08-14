@@ -87,7 +87,7 @@ function Second() {
       path: '/second/guide',
     },
     {
-      title: 'وثائق الأستاذ',
+      title: 'تقويم تشخيصي ووثائق أخرى',
       icon: <FaFolderOpen />,
       path: '/second/teacher_documents',
     },

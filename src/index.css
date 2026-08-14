@@ -78,3 +78,54 @@ body{
   line-height: 1.35;
   text-align: center;
 }
+/* بطاقات أقسام المستويات */
+.section-card {
+  min-height: 150px !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  overflow: visible !important;
+  padding: 16px 10px 14px !important;
+}
+
+/* الأيقونة: نرفعها قليلًا ونقلل المسافة تحتها */
+.section-card .section-icon {
+  margin-bottom: 6px !important;
+  line-height: 1 !important;
+}
+
+/* العنوان: قريب من الأيقونة ويظهر كاملًا */
+.section-card h3 {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  text-align: center !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  line-height: 1.35 !important;
+  font-size: 17px !important;
+  width: 100% !important;
+}
+
+/* هاتف */
+@media (max-width: 700px) {
+  .section-card {
+    min-height: 145px !important;
+    padding: 14px 7px 12px !important;
+  }
+
+  .section-card .section-icon {
+    margin-bottom: 4px !important;
+  }
+
+  .section-card h3 {
+    min-height: 46px !important;
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+  }
+}

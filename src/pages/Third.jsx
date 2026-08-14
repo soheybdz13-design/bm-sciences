@@ -87,7 +87,7 @@ function Third() {
       path: '/third/guide',
     },
     {
-      title: 'وثائق الأستاذ',
+      title: 'تقويم تشخيصي ووثائق أخرى',
       icon: <FaFolderOpen />,
       path: '/third/teacher_documents',
     },

@@ -88,7 +88,7 @@ function First() {
       path: '/first/guide',
     },
     {
-      title: 'وثائق الأستاذ',
+      title: 'تقويم تشخيصي ووثائق أخرى',
       icon: <FaFolderOpen />,
       path: '/first/teacher_documents',
     },

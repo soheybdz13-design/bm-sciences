@@ -47,7 +47,7 @@ function LevelPage() {
     program: 'المنهاج',
     guide: 'الدليل',
     support: 'المعالجة البيداغوجية',
-    teacher_documents: 'وثائق الأستاذ',
+    teacher_documents: 'تقويم تشخيصي ووثائق أخرى',
     annual_progression: 'التدرج السنوي',
     monthly_distribution: 'التوزيع الشهري',
   }

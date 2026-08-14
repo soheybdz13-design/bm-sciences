@@ -157,7 +157,7 @@ const sectionConfig = {
 
   teacher_documents: {
     label:
-      'وثائق الأستاذ: PDF أو Word أو PowerPoint أو ملفات مضغوطة',
+      'تقويم تشخيصي ووثائق أخرى: PDF أو Word أو PowerPoint أو ملفات مضغوطة',
     accept: DOCUMENT_ACCEPT,
     column: 'pdf',
     extensions: [
@@ -515,7 +515,7 @@ function Admin() {
             <option value="guide">الدليل</option>
 
             <option value="teacher_documents">
-              وثائق الأستاذ
+              تقويم تشخيصي ووثائق أخرى
             </option>
 
             {level === 'first' && (
