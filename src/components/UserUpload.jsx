@@ -182,8 +182,6 @@ function UserUpload() {
   const [turnstileToken, setTurnstileToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [fileInputKey, setFileInputKey] = useState(0)
-
-  // الموافقة على حقوق النشر وشروط رفع الملفات
   const [acceptedUploadTerms, setAcceptedUploadTerms] =
     useState(false)
 
@@ -194,6 +192,17 @@ function UserUpload() {
     section === 'tests' || section === 'exams'
 
   const currentConfig = sectionConfig[section]
+
+  function resetTurnstile() {
+    setTurnstileToken('')
+
+    if (
+      window.turnstile &&
+      widgetId.current !== null
+    ) {
+      window.turnstile.reset(widgetId.current)
+    }
+  }
 
   useEffect(() => {
     function renderTurnstile() {
@@ -293,7 +302,6 @@ function UserUpload() {
       return
     }
 
-    // يمنع رفع الملف إن لم يوافق المستخدم على الشروط
     if (!acceptedUploadTerms) {
       alert(
         'يجب الموافقة على شروط رفع الملفات وحقوق النشر أولًا'
@@ -366,19 +374,13 @@ function UserUpload() {
       setYoutubeUrl('')
       setEmail('')
       setFile(null)
-      setTurnstileToken('')
       setAcceptedUploadTerms(false)
       setFileInputKey(prev => prev + 1)
-
-      if (
-        window.turnstile &&
-        widgetId.current !== null
-      ) {
-        window.turnstile.reset(widgetId.current)
-      }
+      resetTurnstile()
     } catch (err) {
       console.error('USER UPLOAD ERROR:', err)
       alert(err.message || 'وقع خطأ غير متوقع')
+      resetTurnstile()
     } finally {
       setLoading(false)
     }
@@ -434,6 +436,7 @@ function UserUpload() {
             setTerm('')
             setFile(null)
             setFileInputKey(prev => prev + 1)
+            resetTurnstile()
           }}
           style={{
             width: '100%',
@@ -453,9 +456,9 @@ function UserUpload() {
           onChange={e => {
             setSection(e.target.value)
             setTerm('')
-            setTitle('')
             setFile(null)
             setFileInputKey(prev => prev + 1)
+            resetTurnstile()
           }}
           style={{
             width: '100%',
@@ -584,7 +587,6 @@ function UserUpload() {
           </p>
         )}
 
-        {/* مربع الموافقة على شروط رفع الملفات */}
         <label
           style={{
             display: 'flex',
@@ -636,16 +638,18 @@ function UserUpload() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !turnstileToken}
           style={{
             background: '#1b5e20',
             color: '#fff',
             padding: '12px 25px',
             border: 'none',
             borderRadius: '8px',
-            cursor: loading
-              ? 'not-allowed'
-              : 'pointer',
+            cursor:
+              loading || !turnstileToken
+                ? 'not-allowed'
+                : 'pointer',
+            opacity: loading || !turnstileToken ? 0.6 : 1,
             fontSize: '18px',
           }}
         >
