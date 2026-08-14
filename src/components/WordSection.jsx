@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { getFileUrl, isArchiveFile } from '../utils/fileUrl'
 
 function WordSection({ lessons }) {
@@ -76,49 +77,59 @@ function WordSection({ lessons }) {
               </div>
             </div>
 
-            {hasArchive ? (
-              <a
-                href={archiveUrl}
-                download
+            <div
+              style={{
+                display: 'flex',
+                gap: '8px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <Link
+                to={`/lesson/${lesson.id}`}
                 className="lesson-btn"
               >
-                ⬇ تحميل الملف المضغوط
-              </a>
-            ) : wordUrl ? (
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '8px',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <a
-                  href={wordUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="lesson-btn"
-                >
-                  👁️ معاينة
-                </a>
+                📄 عرض التفاصيل
+              </Link>
 
+              {hasArchive ? (
                 <a
-                  href={wordUrl}
+                  href={archiveUrl}
                   download
                   className="lesson-btn"
                 >
-                  ⬇ تحميل
+                  ⬇ تحميل الملف المضغوط
                 </a>
-              </div>
-            ) : (
-              <span
-                style={{
-                  color: '#bbb',
-                  fontSize: '14px',
-                }}
-              >
-                الملف غير متوفر
-              </span>
-            )}
+              ) : wordUrl ? (
+                <>
+                  <a
+                    href={wordUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lesson-btn"
+                  >
+                    👁️ معاينة
+                  </a>
+
+                  <a
+                    href={wordUrl}
+                    download
+                    className="lesson-btn"
+                  >
+                    ⬇ تحميل
+                  </a>
+                </>
+              ) : (
+                <span
+                  style={{
+                    color: '#bbb',
+                    fontSize: '14px',
+                    alignSelf: 'center',
+                  }}
+                >
+                  الملف غير متوفر
+                </span>
+              )}
+            </div>
           </div>
         )
       })}

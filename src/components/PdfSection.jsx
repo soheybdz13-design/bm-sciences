@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Viewer,
   Worker,
@@ -174,62 +175,72 @@ function PdfSection({ lessons }) {
                 </div>
               </div>
 
-              {hasArchive ? (
-                <a
-                  href={archiveUrl}
-                  download
-                  target="_blank"
-                  rel="noreferrer"
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '8px',
+                  flexShrink: 0,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <Link
+                  to={`/lesson/${lesson.id}`}
                   className="lesson-btn"
                 >
-                  ⬇ تحميل الملف المضغوط
-                </a>
-              ) : pdfUrl ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '8px',
-                    flexShrink: 0,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedPdf({
-                        title: lesson.title,
-                        url: pdfUrl,
-                      })
-                    }
-                    className="lesson-btn"
-                    style={{
-                      border: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    👁️ معاينة
-                  </button>
+                  📄 عرض التفاصيل
+                </Link>
 
+                {hasArchive ? (
                   <a
-                    href={pdfUrl}
+                    href={archiveUrl}
                     download
                     target="_blank"
                     rel="noreferrer"
                     className="lesson-btn"
                   >
-                    ⬇ تحميل
+                    ⬇ تحميل الملف المضغوط
                   </a>
-                </div>
-              ) : (
-                <span
-                  style={{
-                    color: '#bbb',
-                    fontSize: '14px',
-                  }}
-                >
-                  الملف غير متوفر
-                </span>
-              )}
+                ) : pdfUrl ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedPdf({
+                          title: lesson.title,
+                          url: pdfUrl,
+                        })
+                      }
+                      className="lesson-btn"
+                      style={{
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      👁️ معاينة
+                    </button>
+
+                    <a
+                      href={pdfUrl}
+                      download
+                      target="_blank"
+                      rel="noreferrer"
+                      className="lesson-btn"
+                    >
+                      ⬇ تحميل
+                    </a>
+                  </>
+                ) : (
+                  <span
+                    style={{
+                      color: '#bbb',
+                      fontSize: '14px',
+                      alignSelf: 'center',
+                    }}
+                  >
+                    الملف غير متوفر
+                  </span>
+                )}
+              </div>
             </div>
           )
         })}

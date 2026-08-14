@@ -1,12 +1,15 @@
+import { Link } from 'react-router-dom'
 import { getFileUrl, isArchiveFile } from '../utils/fileUrl'
 
 function getExtension(filePath = '') {
-  return filePath
-    .split('?')[0]
-    .split('#')[0]
-    .split('.')
-    .pop()
-    ?.toLowerCase() || ''
+  return (
+    filePath
+      .split('?')[0]
+      .split('#')[0]
+      .split('.')
+      .pop()
+      ?.toLowerCase() || ''
+  )
 }
 
 function getLessonFile(lesson) {
@@ -150,70 +153,79 @@ function ImageSection({ lessons }) {
               </p>
             )}
 
-            {file?.url ? (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                  padding: '15px',
-                }}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                padding: '15px',
+              }}
+            >
+              <Link
+                to={`/lesson/${lesson.id}`}
+                className="lesson-btn"
               >
-                {!isImage && (
-                  <p
-                    style={{
-                      margin: 0,
-                      textAlign: 'center',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {file.label}
-                  </p>
-                )}
+                📄 عرض التفاصيل
+              </Link>
 
-                {isImage && (
+              {file?.url ? (
+                <>
+                  {!isImage && (
+                    <p
+                      style={{
+                        margin: 0,
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {file.label}
+                    </p>
+                  )}
+
+                  {isImage && (
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="lesson-btn"
+                    >
+                      🔍 عرض الصورة
+                    </a>
+                  )}
+
+                  {(file.type === 'pdf' ||
+                    file.type === 'word' ||
+                    file.type === 'ppt') && (
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="lesson-btn"
+                    >
+                      👁️ فتح الملف
+                    </a>
+                  )}
+
                   <a
                     href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    download
                     className="lesson-btn"
                   >
-                    🔍 عرض الصورة
+                    {file.button}
                   </a>
-                )}
-
-                {(file.type === 'pdf' ||
-                  file.type === 'word' ||
-                  file.type === 'ppt') && (
-                  <a
-                    href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="lesson-btn"
-                  >
-                    👁️ فتح الملف
-                  </a>
-                )}
-
-                <a
-                  href={file.url}
-                  download
-                  className="lesson-btn"
+                </>
+              ) : (
+                <p
+                  style={{
+                    margin: 0,
+                    textAlign: 'center',
+                    color: '#777',
+                  }}
                 >
-                  {file.button}
-                </a>
-              </div>
-            ) : (
-              <p
-                style={{
-                  padding: '15px',
-                  textAlign: 'center',
-                  color: '#777',
-                }}
-              >
-                الملف غير متوفر.
-              </p>
-            )}
+                  الملف غير متوفر.
+                </p>
+              )}
+            </div>
           </div>
         )
       })}

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { getFileUrl, isArchiveFile } from '../utils/fileUrl'
 
 function PptSection({ lessons }) {
@@ -11,6 +12,18 @@ function PptSection({ lessons }) {
         return (
           <div className="section-card" key={lesson.id}>
             <h3>{lesson.title}</h3>
+
+            <Link
+              to={`/lesson/${lesson.id}`}
+              className="lesson-btn"
+              style={{
+                display: 'inline-block',
+                marginTop: '12px',
+                textDecoration: 'none',
+              }}
+            >
+              📄 عرض التفاصيل
+            </Link>
 
             {hasArchive ? (
               <div style={{ marginTop: '16px' }}>

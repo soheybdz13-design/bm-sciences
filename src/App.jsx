@@ -17,6 +17,7 @@ import LevelPage from './pages/LevelPage'
 import Lessons from './pages/Lessons'
 import AllLessons from './pages/AllLessons'
 import ResetPassword from './pages/ResetPassword'
+import LessonDetails from './pages/LessonDetails'
 
 // الصفحات القانونية
 import Privacy from './pages/Privacy'
@@ -104,6 +105,12 @@ function App() {
             <Navigate to="/login" replace />
           )
         }
+      />
+
+      {/* صفحة تفاصيل ملف واحد */}
+      <Route
+        path="/lesson/:id"
+        element={<LessonDetails />}
       />
 
       {/* صفحات الأقسام والملفات */}

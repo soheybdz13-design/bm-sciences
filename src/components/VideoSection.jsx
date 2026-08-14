@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { getFileUrl, isArchiveFile } from '../utils/fileUrl'
 
 function VideoSection({ lessons }) {
@@ -40,11 +41,7 @@ function VideoSection({ lessons }) {
                   </p>
                 )}
 
-                <div
-                  style={{
-                    padding: '15px',
-                  }}
-                >
+                <div style={{ padding: '15px' }}>
                   <p
                     style={{
                       textAlign: 'center',
@@ -55,17 +52,29 @@ function VideoSection({ lessons }) {
                     ملف فيديو مضغوط
                   </p>
 
-                  <a
-                    href={archiveUrl}
-                    download
-                    className="lesson-btn"
+                  <div
                     style={{
-                      display: 'block',
-                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
                     }}
                   >
-                    ⬇ تحميل الملف المضغوط
-                  </a>
+                    <Link
+                      to={`/lesson/${lesson.id}`}
+                      className="lesson-btn"
+                    >
+                      📄 عرض التفاصيل
+                    </Link>
+
+                    <a
+                      href={archiveUrl}
+                      download
+                      className="lesson-btn"
+                      style={{ textAlign: 'center' }}
+                    >
+                      ⬇ تحميل الملف المضغوط
+                    </a>
+                  </div>
                 </div>
               </>
             ) : (
@@ -105,33 +114,46 @@ function VideoSection({ lessons }) {
                   </video>
                 )}
 
-                {videoUrl && lesson.video !== 'EMPTY' && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '10px',
-                      padding: '15px',
-                    }}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    padding: '15px',
+                  }}
+                >
+                  <Link
+                    to={`/lesson/${lesson.id}`}
+                    className="lesson-btn"
                   >
-                    <a
-                      href={videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="lesson-btn"
-                    >
-                      ▶ مشاهدة الفيديو في صفحة جديدة
-                    </a>
+                    📄 عرض التفاصيل
+                  </Link>
 
-                    <a
-                      href={videoUrl}
-                      download
-                      className="lesson-btn"
-                    >
-                      ⬇ تحميل الفيديو
-                    </a>
-                  </div>
-                )}
+                  {videoUrl && lesson.video !== 'EMPTY' ? (
+                    <>
+                      <a
+                        href={videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="lesson-btn"
+                      >
+                        ▶ مشاهدة الفيديو في صفحة جديدة
+                      </a>
+
+                      <a
+                        href={videoUrl}
+                        download
+                        className="lesson-btn"
+                      >
+                        ⬇ تحميل الفيديو
+                      </a>
+                    </>
+                  ) : (
+                    <p style={{ textAlign: 'center', margin: 0 }}>
+                      الفيديو غير متوفر.
+                    </p>
+                  )}
+                </div>
               </>
             )}
           </div>
