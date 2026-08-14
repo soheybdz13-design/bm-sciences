@@ -11,19 +11,18 @@ function PptSection({ lessons }) {
 
         return (
           <div className="section-card" key={lesson.id}>
-            <h3>{lesson.title}</h3>
-
-            <Link
-              to={`/lesson/${lesson.id}`}
-              className="lesson-btn"
-              style={{
-                display: 'inline-block',
-                marginTop: '12px',
-                textDecoration: 'none',
-              }}
-            >
-              📄 عرض التفاصيل
-            </Link>
+            <h3>
+              <Link
+                to={`/lesson/${lesson.id}`}
+                title="اضغط لعرض تفاصيل الملف"
+                style={{
+                  color: 'inherit',
+                  textDecoration: 'none',
+                }}
+              >
+                {lesson.title}
+              </Link>
+            </h3>
 
             {hasArchive ? (
               <div style={{ marginTop: '16px' }}>

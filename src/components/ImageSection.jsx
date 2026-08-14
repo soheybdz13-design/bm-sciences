@@ -139,7 +139,16 @@ function ImageSection({ lessons }) {
                 textAlign: 'center',
               }}
             >
-              {lesson.title}
+              <Link
+                to={`/lesson/${lesson.id}`}
+                title="اضغط لعرض تفاصيل الملف"
+                style={{
+                  color: 'inherit',
+                  textDecoration: 'none',
+                }}
+              >
+                {lesson.title}
+              </Link>
             </h2>
 
             {lesson.description && (
@@ -161,13 +170,6 @@ function ImageSection({ lessons }) {
                 padding: '15px',
               }}
             >
-              <Link
-                to={`/lesson/${lesson.id}`}
-                className="lesson-btn"
-              >
-                📄 عرض التفاصيل
-              </Link>
-
               {file?.url ? (
                 <>
                   {!isImage && (

@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom'
 import { getFileUrl, isArchiveFile } from '../utils/fileUrl'
 
+const titleLinkStyle = {
+  color: 'inherit',
+  textDecoration: 'none',
+}
+
 function VideoSection({ lessons }) {
   return (
     <div className="sections-grid">
@@ -28,7 +33,15 @@ function VideoSection({ lessons }) {
                   📦
                 </div>
 
-                <h2>{lesson.title}</h2>
+                <h2>
+                  <Link
+                    to={`/lesson/${lesson.id}`}
+                    title="اضغط لعرض تفاصيل الملف"
+                    style={titleLinkStyle}
+                  >
+                    {lesson.title}
+                  </Link>
+                </h2>
 
                 {lesson.description && (
                   <p
@@ -52,29 +65,17 @@ function VideoSection({ lessons }) {
                     ملف فيديو مضغوط
                   </p>
 
-                  <div
+                  <a
+                    href={archiveUrl}
+                    download
+                    className="lesson-btn"
                     style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '10px',
+                      display: 'block',
+                      textAlign: 'center',
                     }}
                   >
-                    <Link
-                      to={`/lesson/${lesson.id}`}
-                      className="lesson-btn"
-                    >
-                      📄 عرض التفاصيل
-                    </Link>
-
-                    <a
-                      href={archiveUrl}
-                      download
-                      className="lesson-btn"
-                      style={{ textAlign: 'center' }}
-                    >
-                      ⬇ تحميل الملف المضغوط
-                    </a>
-                  </div>
+                    ⬇ تحميل الملف المضغوط
+                  </a>
                 </div>
               </>
             ) : (
@@ -87,7 +88,15 @@ function VideoSection({ lessons }) {
                   />
                 )}
 
-                <h2>{lesson.title}</h2>
+                <h2>
+                  <Link
+                    to={`/lesson/${lesson.id}`}
+                    title="اضغط لعرض تفاصيل الملف"
+                    style={titleLinkStyle}
+                  >
+                    {lesson.title}
+                  </Link>
+                </h2>
 
                 {lesson.description && (
                   <p
@@ -122,13 +131,6 @@ function VideoSection({ lessons }) {
                     padding: '15px',
                   }}
                 >
-                  <Link
-                    to={`/lesson/${lesson.id}`}
-                    className="lesson-btn"
-                  >
-                    📄 عرض التفاصيل
-                  </Link>
-
                   {videoUrl && lesson.video !== 'EMPTY' ? (
                     <>
                       <a

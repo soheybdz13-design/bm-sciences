@@ -48,9 +48,17 @@ function WordSection({ lessons }) {
               </span>
 
               <div>
-                <div style={{ fontWeight: 'bold' }}>
+                <Link
+                  to={`/lesson/${lesson.id}`}
+                  title="اضغط لعرض تفاصيل الملف"
+                  style={{
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    textDecoration: 'none',
+                  }}
+                >
                   {lesson.title}
-                </div>
+                </Link>
 
                 {lesson.subject && (
                   <div
@@ -84,13 +92,6 @@ function WordSection({ lessons }) {
                 flexWrap: 'wrap',
               }}
             >
-              <Link
-                to={`/lesson/${lesson.id}`}
-                className="lesson-btn"
-              >
-                📄 عرض التفاصيل
-              </Link>
-
               {hasArchive ? (
                 <a
                   href={archiveUrl}

@@ -139,16 +139,21 @@ function PdfSection({ lessons }) {
                 </span>
 
                 <div style={{ minWidth: 0 }}>
-                  <div
+                  <Link
+                    to={`/lesson/${lesson.id}`}
+                    title="اضغط لعرض تفاصيل الملف"
                     style={{
+                      display: 'block',
                       fontWeight: 'bold',
+                      color: '#fff',
+                      textDecoration: 'none',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                     }}
                   >
                     {lesson.title}
-                  </div>
+                  </Link>
 
                   {lesson.subject && (
                     <div
@@ -183,13 +188,6 @@ function PdfSection({ lessons }) {
                   flexWrap: 'wrap',
                 }}
               >
-                <Link
-                  to={`/lesson/${lesson.id}`}
-                  className="lesson-btn"
-                >
-                  📄 عرض التفاصيل
-                </Link>
-
                 {hasArchive ? (
                   <a
                     href={archiveUrl}
