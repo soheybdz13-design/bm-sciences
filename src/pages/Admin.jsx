@@ -444,6 +444,7 @@ function Admin() {
           <select
             value={level}
             disabled={loading}
+            onWheel={e => e.currentTarget.blur()}
             onChange={e => {
               const selectedLevel = e.target.value
 
@@ -666,10 +667,10 @@ function Admin() {
           )}
         </div>
 
-        <AdminUserUploads />
-      </div>
+                <AdminUserUploads />
 
-      <AdminFiles />
+        <AdminFiles />
+      </div>
 
       <Footer />
     </>

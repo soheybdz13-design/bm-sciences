@@ -1,62 +1,102 @@
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-body{
+body {
   font-family: Cairo, sans-serif;
-  background:#f5f7fa;
-}
-/* ================= صفحة الإدارة ================= */
-
-.page .card{
-    max-width:700px;
-    margin:auto;
-    background:#fff;
-    padding:30px;
-    border-radius:20px;
-    box-shadow:0 10px 25px rgba(0,0,0,.08);
-
-    height:auto !important;
-    min-height:auto !important;
-    overflow:visible !important;
-
-    display:block !important;
+  background: #f5f7fa;
 }
 
-.page .card input,
-.page .card textarea,
-.page .card select{
-    width:100%;
-    padding:12px;
-    margin-bottom:15px;
-    border:1px solid #ccc;
-    border-radius:8px;
-    font-size:16px;
+/* ================= الصفحة العامة ================= */
+
+.page {
+  width: 100%;
+  padding: 30px 15px 50px;
 }
 
-.page .card button{
-    width:100%;
-    padding:14px;
-    margin-top:10px;
-    background:#1b5e20;
-    color:white;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:17px;
+.page > h1 {
+  text-align: center;
+  margin-bottom: 25px;
 }
 
-.page .card button:hover{
-    opacity:.9;
+/* ================= بطاقة رفع الملفات ================= */
+
+/* هذه القاعدة تخص فقط بطاقة الرفع الموجودة مباشرة داخل page */
+.page > .card {
+  max-width: 700px;
+  margin: 0 auto 40px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+  display: block !important;
 }
 
-.page .card img{
-    margin-top:20px;
-    border-radius:10px;
-    max-width:100%;
+.page > .card input,
+.page > .card textarea,
+.page > .card select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
 }
+
+.page > .card select {
+  cursor: pointer;
+}
+
+.page > .card button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  background: #1b5e20;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 17px;
+  font-family: inherit;
+}
+
+.page > .card button:hover {
+  opacity: 0.9;
+}
+
+.page > .card img {
+  margin-top: 20px;
+  border-radius: 10px;
+  max-width: 100%;
+}
+
+/* ================= إدارة الملفات المنشورة ================= */
+
+.admin-files-manager {
+  width: min(1100px, calc(100% - 30px));
+  max-width: 1100px;
+  margin: 40px auto 60px !important;
+  padding: 30px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  direction: rtl;
+  overflow: visible;
+}
+
+/* لا تجعل أزرار إدارة الملفات بعرض كامل */
+.admin-files-manager button {
+  font-family: inherit;
+}
+
+/* ================= بطاقات المستويات ================= */
+
 .level-card {
   height: auto !important;
   min-height: 0 !important;
@@ -78,7 +118,9 @@ body{
   line-height: 1.35;
   text-align: center;
 }
-/* بطاقات أقسام المستويات */
+
+/* ================= بطاقات أقسام المستويات ================= */
+
 .section-card {
   min-height: 150px !important;
   height: auto !important;
@@ -90,13 +132,11 @@ body{
   padding: 16px 10px 14px !important;
 }
 
-/* الأيقونة: نرفعها قليلًا ونقلل المسافة تحتها */
 .section-card .section-icon {
   margin-bottom: 6px !important;
   line-height: 1 !important;
 }
 
-/* العنوان: قريب من الأيقونة ويظهر كاملًا */
 .section-card h3 {
   margin: 0 !important;
   padding: 0 !important;
@@ -112,8 +152,25 @@ body{
   width: 100% !important;
 }
 
-/* هاتف */
+/* ================= الهاتف ================= */
+
 @media (max-width: 700px) {
+  .page {
+    padding: 20px 10px 40px;
+  }
+
+  .page > .card {
+    padding: 20px 15px;
+    margin-bottom: 30px;
+  }
+
+  .admin-files-manager {
+    width: calc(100% - 20px);
+    margin: 30px auto 45px !important;
+    padding: 18px 12px;
+    border-radius: 14px;
+  }
+
   .section-card {
     min-height: 145px !important;
     padding: 14px 7px 12px !important;
