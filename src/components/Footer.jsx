@@ -14,7 +14,7 @@ function Footer() {
 
   return (
     <footer className="footer" dir="rtl">
-      <h3>BM Sciences</h3>
+      <h3>CEM Sciences</h3>
 
       <p>
         منصة تعليمية لعلوم الطبيعة والحياة

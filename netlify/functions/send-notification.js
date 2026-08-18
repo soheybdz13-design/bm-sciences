@@ -67,25 +67,25 @@ export const handler = async (event) => {
       }
 
       recipient = toEmail
-      subject = 'تم قبول ملفك في موقع BM Sciences'
+      subject = 'تم قبول ملفك في موقع CEM Sciences'
       text =
         `السلام عليكم،\n\n` +
         `تم قبول الملف بعنوان "${title}"، وهو الآن متوفر في الموقع.\n` +
         `شكراً لمساهمتك.\n\n` +
-        `تحيات فريق BM Sciences.`
+        `تحيات فريق CEM Sciences.`
     } else if (type === 'rejected') {
       if (!validEmail(toEmail)) {
         return json(400, { error: 'Invalid recipient email' })
       }
 
       recipient = toEmail
-      subject = 'تم رفض ملفك في موقع BM Sciences'
+      subject = 'تم رفض ملفك في موقع CEM Sciences'
       text =
         `السلام عليكم،\n\n` +
         `للأسف تم رفض الملف بعنوان "${title}".` +
         (reason ? `\nسبب الرفض: ${reason}` : '') +
         `\n\nيمكنك تعديل الملف وإرساله مرة أخرى.\n\n` +
-        `تحيات فريق BM Sciences.`
+        `تحيات فريق CEM Sciences.`
     } else if (type === 'contact') {
       if (
         !name.trim() ||
@@ -99,7 +99,7 @@ export const handler = async (event) => {
 
       recipient = GMAIL_SENDER
       replyTo = email.trim()
-      subject = `رسالة جديدة من موقع BM Sciences: ${name.trim()}`
+      subject = `رسالة جديدة من موقع CEM Sciences: ${name.trim()}`
       text =
         `وصلتك رسالة جديدة من صفحة اتصل بنا.\n\n` +
         `الاسم: ${name.trim()}\n` +
@@ -135,7 +135,7 @@ export const handler = async (event) => {
     }
 
     const emailLines = [
-      `From: ${mimeHeader('موقع BM Sciences')} <${GMAIL_SENDER}>`,
+      `From: ${mimeHeader('موقع CEM Sciences')} <${GMAIL_SENDER}>`,
       `To: ${recipient}`,
       `Subject: ${mimeHeader(subject)}`,
       ...(replyTo ? [`Reply-To: ${replyTo}`] : []),

@@ -7,11 +7,11 @@ function Navbar({ toggleDark }) {
   return (
     <header className="navbar">
       <div className="logo">
-        <img src={logo} alt="BM Sciences" />
+        <img src={logo} alt="CEM Sciences" />
 
         <div className="logo-text">
-          <h2>BM Sciences</h2>
-          <span>علوم الطبيعة والحياة</span>
+          <h2>CEM Sciences</h2>
+          <span>علوم الطبيعة والحياة للطور المتوسط</span>
         </div>
       </div>
 
