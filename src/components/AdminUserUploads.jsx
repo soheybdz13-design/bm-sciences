@@ -44,15 +44,6 @@ function makeTopicTitle(topicNumber) {
   return `الموضوع رقم ${String(topicNumber).padStart(2, '0')}`
 }
 
-function getFileExtension(filePath = '') {
-  return filePath
-    .split('/')
-    .pop()
-    ?.split('.')
-    .pop()
-    ?.toLowerCase() || ''
-}
-
 function isArchiveFile(filePath) {
   return /\.(zip|rar)$/i.test(filePath || '')
 }
@@ -80,6 +71,7 @@ function isPdfFile(filePath) {
 function AdminUserUploads() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [processingId, setProcessingId] = useState(null)
 
   useEffect(() => {
     loadPending()
@@ -128,23 +120,61 @@ function AdminUserUploads() {
   }
 
   async function notifyUser(type, item, reason = '') {
-    if (!item.user_email) return
+    if (!item.user_email) {
+      return {
+        success: false,
+        message: 'لا يوجد بريد إلكتروني للزائر',
+      }
+    }
 
     try {
-      await fetch('/.netlify/functions/send-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type,
-          toEmail: item.user_email,
-          title: item.title,
-          reason,
-        }),
-      })
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        throw new Error(
+          'انتهت جلسة الإدارة، أعد تسجيل الدخول'
+        )
+      }
+
+      const response = await fetch(
+        `${R2_WORKER_URL}/admin-notify-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            type,
+            toEmail: item.user_email,
+            title: item.title,
+            reason,
+          }),
+        }
+      )
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || 'تعذر إرسال البريد الإلكتروني'
+        )
+      }
+
+      return {
+        success: true,
+        message: result.message || 'تم إرسال البريد بنجاح',
+      }
     } catch (err) {
       console.error('NOTIFY ERROR:', err)
+
+      return {
+        success: false,
+        message:
+          err.message || 'تعذر إرسال البريد الإلكتروني',
+      }
     }
   }
 
@@ -192,11 +222,14 @@ function AdminUserUploads() {
     if (!ok) return
 
     try {
+      setProcessingId(item.id)
+
       let lessonTitle =
         item.title?.trim() || 'بدون عنوان'
 
       const isTopic =
-        item.section === 'tests' || item.section === 'exams'
+        item.section === 'tests' ||
+        item.section === 'exams'
 
       if (isTopic) {
         if (!item.term) {
@@ -283,19 +316,32 @@ function AdminUserUploads() {
         return
       }
 
-      await notifyUser('approved', {
-        ...item,
-        title: lessonTitle,
-      })
+      const notification = await notifyUser(
+        'approved',
+        {
+          ...item,
+          title: lessonTitle,
+        }
+      )
 
       setItems(prev =>
         prev.filter(i => i.id !== item.id)
       )
 
-      alert(`تم قبول الملف بنجاح باسم: ${lessonTitle}`)
+      if (notification.success) {
+        alert(
+          `تم قبول الملف بنجاح باسم: ${lessonTitle}\nتم إرسال إشعار القبول إلى الزائر ✅`
+        )
+      } else {
+        alert(
+          `تم قبول الملف بنجاح باسم: ${lessonTitle}\nلكن تعذر إرسال الإيميل: ${notification.message}`
+        )
+      }
     } catch (err) {
       console.error('APPROVE ERROR:', err)
       alert('وقع خطأ غير متوقع أثناء قبول الملف')
+    } finally {
+      setProcessingId(null)
     }
   }
 
@@ -312,6 +358,8 @@ function AdminUserUploads() {
     )
 
     try {
+      setProcessingId(item.id)
+
       if (item.file_url && !isR2File(item.file_url)) {
         await supabase.storage
           .from('user-files')
@@ -331,16 +379,30 @@ function AdminUserUploads() {
         return
       }
 
-      await notifyUser('rejected', item, reason || '')
+      const notification = await notifyUser(
+        'rejected',
+        item,
+        reason || ''
+      )
 
       setItems(prev =>
         prev.filter(i => i.id !== item.id)
       )
 
-      alert('تم رفض الملف وحفظ سبب الرفض')
+      if (notification.success) {
+        alert(
+          'تم رفض الملف وحفظ سبب الرفض.\nتم إرسال إشعار الرفض إلى الزائر ✅'
+        )
+      } else {
+        alert(
+          `تم رفض الملف وحفظ سبب الرفض.\nلكن تعذر إرسال الإيميل: ${notification.message}`
+        )
+      }
     } catch (err) {
       console.error('REJECT ERROR:', err)
       alert('وقع خطأ غير متوقع أثناء رفض الملف')
+    } finally {
+      setProcessingId(null)
     }
   }
 
@@ -352,6 +414,7 @@ function AdminUserUploads() {
 
       <button
         onClick={loadPending}
+        disabled={loading}
         style={{
           marginBottom: '15px',
           background: '#1976d2',
@@ -359,7 +422,8 @@ function AdminUserUploads() {
           border: 'none',
           padding: '8px 15px',
           borderRadius: '6px',
-          cursor: 'pointer',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.7 : 1,
         }}
       >
         تحديث القائمة
@@ -370,100 +434,119 @@ function AdminUserUploads() {
       ) : items.length === 0 ? (
         <p>لا توجد ملفات في طور المراجعة.</p>
       ) : (
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-          }}
-        >
-          <thead>
-            <tr>
-              <th>العنوان</th>
-              <th>المستوى</th>
-              <th>القسم</th>
-              <th>الملف</th>
-              <th>رابط YouTube</th>
-              <th>العمليات</th>
-            </tr>
-          </thead>
+        <div style={{ overflowX: 'auto' }}>
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              minWidth: '760px',
+            }}
+          >
+            <thead>
+              <tr>
+                <th>العنوان</th>
+                <th>المستوى</th>
+                <th>القسم</th>
+                <th>الملف</th>
+                <th>رابط YouTube</th>
+                <th>العمليات</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {items.map(item => {
-              const fileUrl = getPublicUrl(item.file_url)
+            <tbody>
+              {items.map(item => {
+                const fileUrl = getPublicUrl(item.file_url)
+                const isProcessing =
+                  processingId === item.id
 
-              return (
-                <tr key={item.id}>
-                  <td>{item.title}</td>
-                  <td>{item.level}</td>
+                return (
+                  <tr key={item.id}>
+                    <td>{item.title}</td>
+                    <td>{item.level}</td>
 
-                  <td>
-                    {sectionLabels[item.section] ||
-                      item.section}
-                  </td>
+                    <td>
+                      {sectionLabels[item.section] ||
+                        item.section}
+                    </td>
 
-                  <td>
-                    {fileUrl ? (
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                    <td>
+                      {fileUrl ? (
+                        <a
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          فتح الملف
+                        </a>
+                      ) : (
+                        'لا يوجد'
+                      )}
+                    </td>
+
+                    <td>
+                      {item.youtube ? (
+                        <a
+                          href={item.youtube}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          فتح الرابط
+                        </a>
+                      ) : (
+                        'لا يوجد'
+                      )}
+                    </td>
+
+                    <td>
+                      <button
+                        type="button"
+                        disabled={isProcessing}
+                        style={{
+                          background: '#1b5e20',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          cursor: isProcessing
+                            ? 'not-allowed'
+                            : 'pointer',
+                          opacity: isProcessing ? 0.6 : 1,
+                          marginRight: '8px',
+                        }}
+                        onClick={() => handleApprove(item)}
                       >
-                        فتح الملف
-                      </a>
-                    ) : (
-                      'لا يوجد'
-                    )}
-                  </td>
+                        {isProcessing
+                          ? 'جاري المعالجة...'
+                          : 'قبول'}
+                      </button>
 
-                  <td>
-                    {item.youtube ? (
-                      <a
-                        href={item.youtube}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        disabled={isProcessing}
+                        style={{
+                          background: '#c62828',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          cursor: isProcessing
+                            ? 'not-allowed'
+                            : 'pointer',
+                          opacity: isProcessing ? 0.6 : 1,
+                        }}
+                        onClick={() => handleReject(item)}
                       >
-                        فتح الرابط
-                      </a>
-                    ) : (
-                      'لا يوجد'
-                    )}
-                  </td>
-
-                  <td>
-                    <button
-                      style={{
-                        background: '#1b5e20',
-                        color: '#fff',
-                        border: 'none',
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        marginRight: '8px',
-                      }}
-                      onClick={() => handleApprove(item)}
-                    >
-                      قبول
-                    </button>
-
-                    <button
-                      style={{
-                        background: 'red',
-                        color: '#fff',
-                        border: 'none',
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => handleReject(item)}
-                    >
-                      رفض
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                        {isProcessing
+                          ? 'جاري المعالجة...'
+                          : 'رفض'}
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
