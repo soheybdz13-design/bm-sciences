@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabaseClient'
 
 const WORKER_URL =
-  'https://bm-sciences-upload.soheybdz13.workers.dev'
+  'https://upload.cem-sciences.com'
 
 export async function uploadToR2(file) {
   if (!file) return null

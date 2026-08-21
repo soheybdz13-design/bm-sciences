@@ -9,7 +9,7 @@ import {
 import { supabase } from '../lib/supabaseClient'
 
 const R2_WORKER_URL =
-  'https://bm-sciences-upload.soheybdz13.workers.dev'
+  'https://upload.cem-sciences.com'
 
 const levelLabels = {
   first: 'الأولى متوسط',

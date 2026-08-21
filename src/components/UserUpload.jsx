@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 const WORKER_URL =
-  'https://bm-sciences-upload.soheybdz13.workers.dev'
+  'https://upload.cem-sciences.com'
 
 const TURNSTILE_SITE_KEY =
   '0x4AAAAAAEKSC4sa6IMYEu-1'

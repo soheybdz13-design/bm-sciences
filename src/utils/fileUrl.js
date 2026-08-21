@@ -1,5 +1,5 @@
 const R2_WORKER_URL =
-  'https://bm-sciences-upload.soheybdz13.workers.dev'
+  'https://upload.cem-sciences.com'
 
 export function getFileUrl(filePath) {
   if (!filePath) return null
