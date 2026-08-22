@@ -18,6 +18,13 @@ const levelLabels = {
   fourth: 'الرابعة متوسط',
 }
 
+const titleLevelLabels = {
+  first: 'السنة الأولى متوسط',
+  second: 'السنة الثانية متوسط',
+  third: 'السنة الثالثة متوسط',
+  fourth: 'السنة الرابعة متوسط',
+}
+
 const sectionLabels = {
   pdf: 'مذكرات PDF',
   word: 'مذكرات Word',
@@ -39,15 +46,51 @@ const sectionLabels = {
   monthly_distribution: 'التوزيع الشهري',
 }
 
+const topicSectionLabels = {
+  tests: 'فرض',
+  exams: 'اختبار',
+}
+
+const termLabels = {
+  term1: 'الفصل الأول',
+  term2: 'الفصل الثاني',
+  term3: 'الفصل الثالث',
+}
+
 function getFileExtension(value = '') {
   const cleanValue = value.split('?')[0]
 
-  return cleanValue
-    .split('/')
-    .pop()
-    ?.split('.')
-    .pop()
-    ?.toUpperCase() || 'FILE'
+  return (
+    cleanValue
+      .split('/')
+      .pop()
+      ?.split('.')
+      .pop()
+      ?.toUpperCase() || 'FILE'
+  )
+}
+
+function makeTopicTitle(topicNumber, level, section, term) {
+  const formattedNumber = String(topicNumber).padStart(2, '0')
+
+  return (
+    `النموذج رقم ${formattedNumber} - ` +
+    `${topicSectionLabels[section]} ${termLabels[term]} ` +
+    `في علوم الطبيعة والحياة - ${titleLevelLabels[level]}`
+  )
+}
+
+function getTopicNumber(title = '') {
+  const match = title.match(/رقم\s*([0-9٠-٩]+)/)
+
+  if (!match) return 0
+
+  const westernDigits = match[1].replace(
+    /[٠-٩]/g,
+    digit => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)
+  )
+
+  return Number(westernDigits) || 0
 }
 
 function AdminFiles() {
@@ -193,9 +236,80 @@ function AdminFiles() {
     }
   }
 
+  async function renumberTopics(level, section, term) {
+    const isTopic =
+      section === 'tests' || section === 'exams'
+
+    if (!isTopic || !level || !term) {
+      return
+    }
+
+    const { data: topicFiles, error: loadError } =
+      await supabase
+        .from('lessons')
+        .select('id, title, created_at')
+        .eq('level', level)
+        .eq('section', section)
+        .eq('term', term)
+
+    if (loadError) {
+      throw new Error(
+        `تعذر جلب ملفات المجموعة لإعادة الترقيم: ${loadError.message}`
+      )
+    }
+
+    const sortedTopics = [...(topicFiles || [])].sort((a, b) => {
+      const numberDifference =
+        getTopicNumber(a.title) - getTopicNumber(b.title)
+
+      if (numberDifference !== 0) {
+        return numberDifference
+      }
+
+      return (
+        new Date(a.created_at || 0) -
+        new Date(b.created_at || 0)
+      )
+    })
+
+    for (let index = 0; index < sortedTopics.length; index += 1) {
+      const topic = sortedTopics[index]
+
+      const newTitle = makeTopicTitle(
+        index + 1,
+        level,
+        section,
+        term
+      )
+
+      if (topic.title === newTitle) {
+        continue
+      }
+
+      const { error: updateError } = await supabase
+        .from('lessons')
+        .update({ title: newTitle })
+        .eq('id', topic.id)
+
+      if (updateError) {
+        throw new Error(
+          `تعذر إعادة ترقيم النموذج: ${updateError.message}`
+        )
+      }
+    }
+  }
+
   async function deleteFile(file) {
+    const isTopic =
+      file.section === 'tests' ||
+      file.section === 'exams'
+
+    const topicMessage = isTopic
+      ? '\n\nملاحظة: بعد الحذف، سيتم إعادة ترقيم كل النماذج المتبقية في نفس المستوى والفصل تلقائيًا.'
+      : ''
+
     const ok = window.confirm(
-      `هل تريد حذف الملف نهائيًا؟\n\n${file.title}`
+      `هل تريد حذف الملف نهائيًا؟\n\n${file.title}${topicMessage}`
     )
 
     if (!ok) return
@@ -227,11 +341,23 @@ function AdminFiles() {
         )
       }
 
-      setFiles(prev =>
-        prev.filter(currentFile => currentFile.id !== file.id)
-      )
+      if (isTopic) {
+        await renumberTopics(
+          file.level,
+          file.section,
+          file.term
+        )
+      }
 
-      alert('تم حذف الملف والسجل بنجاح')
+      await loadFiles()
+
+      if (isTopic) {
+        alert(
+          'تم حذف الملف بنجاح وإعادة ترقيم النماذج المتبقية تلقائيًا'
+        )
+      } else {
+        alert('تم حذف الملف والسجل بنجاح')
+      }
     } catch (err) {
       console.error('DELETE ERROR:', err)
 
@@ -361,7 +487,7 @@ function AdminFiles() {
 
   return (
     <section
-  className="admin-files-manager"
+      className="admin-files-manager"
       dir="rtl"
       style={{
         marginTop: '40px',
