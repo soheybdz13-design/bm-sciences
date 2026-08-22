@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
-const R2_WORKER_URL =
-  'https://upload.cem-sciences.com'
+const R2_WORKER_URL = 'https://upload.cem-sciences.com'
 
 const sectionLabels = {
   pdf: 'مذكرات PDF',
@@ -25,6 +24,24 @@ const sectionLabels = {
   monthly_distribution: 'التوزيع الشهري',
 }
 
+const levelLabels = {
+  first: 'السنة الأولى متوسط',
+  second: 'السنة الثانية متوسط',
+  third: 'السنة الثالثة متوسط',
+  fourth: 'السنة الرابعة متوسط',
+}
+
+const topicSectionLabels = {
+  tests: 'فرض',
+  exams: 'اختبار',
+}
+
+const termLabels = {
+  term1: 'الفصل الأول',
+  term2: 'الفصل الثاني',
+  term3: 'الفصل الثالث',
+}
+
 const pdfSections = [
   'pdf',
   'tests',
@@ -40,8 +57,14 @@ const pdfSections = [
   'monthly_distribution',
 ]
 
-function makeTopicTitle(topicNumber) {
-  return `الموضوع رقم ${String(topicNumber).padStart(2, '0')}`
+function makeTopicTitle(topicNumber, level, section, term) {
+  const formattedNumber = String(topicNumber).padStart(2, '0')
+
+  return (
+    `النموذج رقم ${formattedNumber} - ` +
+    `${topicSectionLabels[section]} ${termLabels[term]} ` +
+    `في علوم الطبيعة والحياة - ${levelLabels[level]}`
+  )
 }
 
 function isArchiveFile(filePath) {
@@ -49,9 +72,7 @@ function isArchiveFile(filePath) {
 }
 
 function isImageFile(filePath) {
-  return /\.(jpg|jpeg|png|webp|gif)$/i.test(
-    filePath || ''
-  )
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(filePath || '')
 }
 
 function isWordFile(filePath) {
@@ -59,9 +80,7 @@ function isWordFile(filePath) {
 }
 
 function isPptFile(filePath) {
-  return /\.(ppt|pptx|pps|ppsx)$/i.test(
-    filePath || ''
-  )
+  return /\.(ppt|pptx|pps|ppsx)$/i.test(filePath || '')
 }
 
 function isPdfFile(filePath) {
@@ -133,9 +152,7 @@ function AdminUserUploads() {
       } = await supabase.auth.getSession()
 
       if (!session?.access_token) {
-        throw new Error(
-          'انتهت جلسة الإدارة، أعد تسجيل الدخول'
-        )
+        throw new Error('انتهت جلسة الإدارة، أعد تسجيل الدخول')
       }
 
       const response = await fetch(
@@ -215,6 +232,8 @@ function AdminUserUploads() {
   }
 
   async function handleApprove(item) {
+    if (processingId) return
+
     const ok = window.confirm(
       `هل تريد قبول هذا الملف وإضافته للموقع؟\nالعنوان الحالي: "${item.title}"`
     )
@@ -232,9 +251,9 @@ function AdminUserUploads() {
         item.section === 'exams'
 
       if (isTopic) {
-        if (!item.term) {
+        if (!item.level || !item.section || !item.term) {
           alert(
-            'هذا الملف تابع للفروض أو الاختبارات، لكنه لا يحتوي على فصل'
+            'هذا الملف يحتاج مستوى وقسمًا وفصلًا قبل قبوله'
           )
           return
         }
@@ -247,13 +266,32 @@ function AdminUserUploads() {
           })
 
         if (counterError) {
+          console.error(
+            'ERROR getting next topic number:',
+            counterError
+          )
+
           alert(
-            `تعذر الحصول على رقم الموضوع التالي: ${counterError.message}`
+            `تعذر الحصول على رقم النموذج التالي: ${counterError.message}`
           )
           return
         }
 
-        lessonTitle = makeTopicTitle(topicNumber)
+        if (
+          topicNumber === null ||
+          topicNumber === undefined ||
+          Number(topicNumber) < 1
+        ) {
+          alert('تعذر إنشاء رقم نموذج صالح')
+          return
+        }
+
+        lessonTitle = makeTopicTitle(
+          topicNumber,
+          item.level,
+          item.section,
+          item.term
+        )
       } else {
         const editedTitle = window.prompt(
           'عدّل عنوان الملف الذي سيظهر في الموقع:',
@@ -298,6 +336,8 @@ function AdminUserUploads() {
         .insert([lesson])
 
       if (insertError) {
+        console.error('ERROR inserting lesson:', insertError)
+
         alert(
           `وقع خطأ أثناء إضافة الملف للدروس: ${insertError.message}`
         )
@@ -310,8 +350,13 @@ function AdminUserUploads() {
         .eq('id', item.id)
 
       if (updateError) {
+        console.error(
+          'ERROR updating user upload status:',
+          updateError
+        )
+
         alert(
-          'تمت إضافة الملف للدروس لكن لم يتم تحديث حالة الطلب'
+          'تمت إضافة الملف للدروس، لكن لم يتم تحديث حالة الطلب'
         )
         return
       }
@@ -325,27 +370,31 @@ function AdminUserUploads() {
       )
 
       setItems(prev =>
-        prev.filter(i => i.id !== item.id)
+        prev.filter(pendingItem => pendingItem.id !== item.id)
       )
 
       if (notification.success) {
         alert(
-          `تم قبول الملف بنجاح باسم: ${lessonTitle}\nتم إرسال إشعار القبول إلى الزائر ✅`
+          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nتم إرسال إشعار القبول إلى الزائر ✅`
         )
       } else {
         alert(
-          `تم قبول الملف بنجاح باسم: ${lessonTitle}\nلكن تعذر إرسال الإيميل: ${notification.message}`
+          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nلكن تعذر إرسال الإيميل: ${notification.message}`
         )
       }
     } catch (err) {
       console.error('APPROVE ERROR:', err)
-      alert('وقع خطأ غير متوقع أثناء قبول الملف')
+      alert(
+        err.message || 'وقع خطأ غير متوقع أثناء قبول الملف'
+      )
     } finally {
       setProcessingId(null)
     }
   }
 
   async function handleReject(item) {
+    if (processingId) return
+
     const ok = window.confirm(
       `هل تريد رفض هذا الملف؟\nالعنوان: "${item.title}"`
     )
@@ -361,9 +410,16 @@ function AdminUserUploads() {
       setProcessingId(item.id)
 
       if (item.file_url && !isR2File(item.file_url)) {
-        await supabase.storage
+        const { error: removeError } = await supabase.storage
           .from('user-files')
           .remove([item.file_url])
+
+        if (removeError) {
+          console.error(
+            'ERROR removing rejected file:',
+            removeError
+          )
+        }
       }
 
       const { error: updateError } = await supabase
@@ -386,7 +442,7 @@ function AdminUserUploads() {
       )
 
       setItems(prev =>
-        prev.filter(i => i.id !== item.id)
+        prev.filter(pendingItem => pendingItem.id !== item.id)
       )
 
       if (notification.success) {
@@ -413,8 +469,9 @@ function AdminUserUploads() {
       </h2>
 
       <button
+        type="button"
         onClick={loadPending}
-        disabled={loading}
+        disabled={loading || processingId !== null}
         style={{
           marginBottom: '15px',
           background: '#1976d2',
@@ -422,8 +479,12 @@ function AdminUserUploads() {
           border: 'none',
           padding: '8px 15px',
           borderRadius: '6px',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.7 : 1,
+          cursor:
+            loading || processingId !== null
+              ? 'not-allowed'
+              : 'pointer',
+          opacity:
+            loading || processingId !== null ? 0.7 : 1,
         }}
       >
         تحديث القائمة
@@ -447,6 +508,7 @@ function AdminUserUploads() {
                 <th>العنوان</th>
                 <th>المستوى</th>
                 <th>القسم</th>
+                <th>الفصل</th>
                 <th>الملف</th>
                 <th>رابط YouTube</th>
                 <th>العمليات</th>
@@ -461,12 +523,19 @@ function AdminUserUploads() {
 
                 return (
                   <tr key={item.id}>
-                    <td>{item.title}</td>
-                    <td>{item.level}</td>
+                    <td>{item.title || 'بدون عنوان'}</td>
+
+                    <td>
+                      {levelLabels[item.level] || item.level}
+                    </td>
 
                     <td>
                       {sectionLabels[item.section] ||
                         item.section}
+                    </td>
+
+                    <td>
+                      {termLabels[item.term] || '-'}
                     </td>
 
                     <td>
@@ -500,17 +569,21 @@ function AdminUserUploads() {
                     <td>
                       <button
                         type="button"
-                        disabled={isProcessing}
+                        disabled={isProcessing || processingId !== null}
                         style={{
                           background: '#1b5e20',
                           color: '#fff',
                           border: 'none',
                           padding: '6px 10px',
                           borderRadius: '6px',
-                          cursor: isProcessing
-                            ? 'not-allowed'
-                            : 'pointer',
-                          opacity: isProcessing ? 0.6 : 1,
+                          cursor:
+                            isProcessing || processingId !== null
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity:
+                            isProcessing || processingId !== null
+                              ? 0.6
+                              : 1,
                           marginRight: '8px',
                         }}
                         onClick={() => handleApprove(item)}
@@ -522,17 +595,21 @@ function AdminUserUploads() {
 
                       <button
                         type="button"
-                        disabled={isProcessing}
+                        disabled={isProcessing || processingId !== null}
                         style={{
                           background: '#c62828',
                           color: '#fff',
                           border: 'none',
                           padding: '6px 10px',
                           borderRadius: '6px',
-                          cursor: isProcessing
-                            ? 'not-allowed'
-                            : 'pointer',
-                          opacity: isProcessing ? 0.6 : 1,
+                          cursor:
+                            isProcessing || processingId !== null
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity:
+                            isProcessing || processingId !== null
+                              ? 0.6
+                              : 1,
                         }}
                         onClick={() => handleReject(item)}
                       >

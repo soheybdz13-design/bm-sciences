@@ -190,17 +190,22 @@ const sectionConfig = {
   },
 }
 
-const levelShortNames = {
-  first: '1 متوسط',
-  second: '2 متوسط',
-  third: '3 متوسط',
-  fourth: '4 متوسط',
+const levelLabels = {
+  first: 'السنة الأولى متوسط',
+  second: 'السنة الثانية متوسط',
+  third: 'السنة الثالثة متوسط',
+  fourth: 'السنة الرابعة متوسط',
 }
 
-const termNumbers = {
-  term1: '1',
-  term2: '2',
-  term3: '3',
+const topicSectionLabels = {
+  tests: 'فرض',
+  exams: 'اختبار',
+}
+
+const termLabels = {
+  term1: 'الفصل الأول',
+  term2: 'الفصل الثاني',
+  term3: 'الفصل الثالث',
 }
 
 function getFileExtension(fileName) {
@@ -212,16 +217,13 @@ function getTitleFromFileName(fileName) {
 }
 
 function makeTopicTitle(topicNumber, level, section, term) {
-  const sectionLabel =
-    section === 'tests' ? 'فروض' : 'اختبارات'
+  const formattedNumber = String(topicNumber).padStart(2, '0')
 
-  const termNumber = termNumbers[term] || ''
-  const levelName = levelShortNames[level] || ''
-
-  return `النموذج - ${String(topicNumber).padStart(
-    2,
-    '0'
-  )} - ${sectionLabel} الفصل ${termNumber} - علوم الطبيعة والحياة - ${levelName}`
+  return (
+    `النموذج رقم ${formattedNumber} - ` +
+    `${topicSectionLabels[section]} ${termLabels[term]} ` +
+    `في علوم الطبيعة والحياة - ${levelLabels[level]}`
+  )
 }
 
 function isArchiveFile(fileName) {
@@ -247,7 +249,10 @@ function isPdfFile(fileName) {
 }
 
 function assignFileToLesson(lesson, section, fileName, fileUrl) {
-  if (section === 'print' || section === 'teacher_documents') {
+  if (
+    section === 'print' ||
+    section === 'teacher_documents'
+  ) {
     if (isImageFile(fileName)) {
       lesson.image = fileUrl
     } else if (isPdfFile(fileName)) {
@@ -366,7 +371,7 @@ function Admin() {
 
           if (counterError) {
             throw new Error(
-              `تعذر الحصول على رقم الموضوع التالي: ${counterError.message}`
+              `تعذر الحصول على رقم النموذج التالي: ${counterError.message}`
             )
           }
 

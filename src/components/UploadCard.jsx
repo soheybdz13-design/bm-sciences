@@ -22,8 +22,32 @@ async function uploadToBucket(bucket, file) {
   return data.publicUrl
 }
 
-function makeTopicTitle(topicNumber) {
-  return `الموضوع رقم ${String(topicNumber).padStart(2, '0')}`
+const levelLabels = {
+  first: 'السنة الأولى متوسط',
+  second: 'السنة الثانية متوسط',
+  third: 'السنة الثالثة متوسط',
+  fourth: 'السنة الرابعة متوسط',
+}
+
+const topicSectionLabels = {
+  tests: 'فرض',
+  exams: 'اختبار',
+}
+
+const termLabels = {
+  term1: 'الفصل الأول',
+  term2: 'الفصل الثاني',
+  term3: 'الفصل الثالث',
+}
+
+function makeTopicTitle(topicNumber, level, section, term) {
+  const formattedNumber = String(topicNumber).padStart(2, '0')
+
+  return (
+    `النموذج رقم ${formattedNumber} - ` +
+    `${topicSectionLabels[section]} ${termLabels[term]} ` +
+    `في علوم الطبيعة والحياة - ${levelLabels[level]}`
+  )
 }
 
 export default function UploadCard() {
@@ -40,7 +64,8 @@ export default function UploadCard() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
-  const needsTerm = section === 'tests' || section === 'exams'
+  const needsTerm =
+    section === 'tests' || section === 'exams'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -81,12 +106,18 @@ export default function UploadCard() {
             'ERROR getting next topic number:',
             error
           )
+
           throw new Error(
-            `تعذر الحصول على رقم الموضوع التالي: ${error.message}`
+            `تعذر الحصول على رقم النموذج التالي: ${error.message}`
           )
         }
 
-        finalTitle = makeTopicTitle(topicNumber)
+        finalTitle = makeTopicTitle(
+          topicNumber,
+          level,
+          section,
+          term
+        )
       }
 
       const [pdf, video, image, word] = await Promise.all([
@@ -110,13 +141,16 @@ export default function UploadCard() {
         })
 
       if (insertError) {
-        console.error('ERROR inserting into lessons:', insertError)
+        console.error(
+          'ERROR inserting into lessons:',
+          insertError
+        )
         throw insertError
       }
 
       setMessage(
         needsTerm
-          ? `تم رفع الملف بنجاح باسم: ${finalTitle} ✅`
+          ? `تم رفع الملف بنجاح باسم:\n${finalTitle} ✅`
           : 'تم رفع الدرس والملفات بنجاح ✅'
       )
 
@@ -130,6 +164,7 @@ export default function UploadCard() {
       setWordFile(null)
     } catch (err) {
       console.error('UPLOAD ERROR:', err)
+
       setMessage(
         err.message || 'وقع خطأ أثناء الرفع أو الحفظ ❌'
       )
@@ -140,12 +175,15 @@ export default function UploadCard() {
 
   return (
     <div className="card" style={{ marginTop: '40px' }}>
-      <h2 style={{ textAlign: 'center' }}>رفع درس جديد</h2>
+      <h2 style={{ textAlign: 'center' }}>
+        رفع درس جديد
+      </h2>
 
       <form onSubmit={handleSubmit}>
         {!needsTerm && (
           <div style={{ marginBottom: '10px' }}>
             <label>عنوان الدرس</label>
+
             <input
               type="text"
               value={title}
@@ -160,6 +198,7 @@ export default function UploadCard() {
 
         <div style={{ marginBottom: '10px' }}>
           <label>المستوى</label>
+
           <select
             value={level}
             disabled={loading}
@@ -177,6 +216,7 @@ export default function UploadCard() {
 
         <div style={{ marginBottom: '10px' }}>
           <label>القسم</label>
+
           <select
             value={section}
             disabled={loading}
@@ -207,6 +247,7 @@ export default function UploadCard() {
         {needsTerm && (
           <div style={{ marginBottom: '10px' }}>
             <label>الفصل</label>
+
             <select
               value={term}
               disabled={loading}
@@ -226,6 +267,7 @@ export default function UploadCard() {
           <label>
             ملف PDF {needsTerm ? '(إجباري)' : '(اختياري)'}
           </label>
+
           <input
             type="file"
             accept="application/pdf"
@@ -238,6 +280,7 @@ export default function UploadCard() {
 
         <div style={{ marginBottom: '10px' }}>
           <label>فيديو (اختياري)</label>
+
           <input
             type="file"
             accept="video/*"
@@ -250,6 +293,7 @@ export default function UploadCard() {
 
         <div style={{ marginBottom: '10px' }}>
           <label>صورة (اختياري)</label>
+
           <input
             type="file"
             accept="image/*"
@@ -262,6 +306,7 @@ export default function UploadCard() {
 
         <div style={{ marginBottom: '10px' }}>
           <label>ملف Word (اختياري)</label>
+
           <input
             type="file"
             accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -293,6 +338,7 @@ export default function UploadCard() {
           style={{
             marginTop: '15px',
             fontWeight: 'bold',
+            whiteSpace: 'pre-line',
           }}
         >
           {message}
