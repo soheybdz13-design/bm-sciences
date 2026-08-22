@@ -115,6 +115,22 @@ function getLessonFile(lesson) {
   return null
 }
 
+function setMetaTag(attribute, key, content) {
+  let tag = document.querySelector(
+    `meta[${attribute}="${key}"]`
+  )
+
+  if (!tag) {
+    tag = document.createElement('meta')
+    tag.setAttribute(attribute, key)
+    document.head.appendChild(tag)
+  }
+
+  tag.setAttribute('content', content)
+
+  return tag
+}
+
 function LessonDetails() {
   const { id } = useParams()
 
@@ -150,15 +166,103 @@ function LessonDetails() {
     }
   }
 
+  useEffect(() => {
+    if (!lesson) return
+
+    const levelName =
+      levelNames[lesson.level] || 'التعليم المتوسط'
+
+    const sectionName =
+      sectionNames[lesson.section] || 'ملفات العلوم الطبيعية'
+
+    const termName = lesson.term
+      ? termNames[lesson.term]
+      : ''
+
+    const pageTitle = `${lesson.title} | ${levelName} | CEM Sciences`
+
+    const pageDescription =
+      lesson.description ||
+      `${sectionName} في مادة علوم الطبيعة والحياة للسنة ${levelName}${
+        termName ? `، ${termName}` : ''
+      }. تحميل ومعاينة الملف من موقع CEM Sciences.`
+
+    const pageUrl = `https://cem-sciences.com/lesson/${id}`
+
+    document.title = pageTitle
+
+    const descriptionTag = setMetaTag(
+      'name',
+      'description',
+      pageDescription
+    )
+
+    setMetaTag('property', 'og:title', pageTitle)
+    setMetaTag(
+      'property',
+      'og:description',
+      pageDescription
+    )
+    setMetaTag('property', 'og:url', pageUrl)
+    setMetaTag('name', 'twitter:title', pageTitle)
+    setMetaTag(
+      'name',
+      'twitter:description',
+      pageDescription
+    )
+
+    return () => {
+      document.title =
+        'CEM Sciences | علوم الطبيعة والحياة للتعليم المتوسط'
+
+      descriptionTag.setAttribute(
+        'content',
+        'CEM Sciences منصة تعليمية لعلوم الطبيعة والحياة للتعليم المتوسط في الجزائر. مذكرات، فروض، اختبارات، تمارين، ملخصات، مخططات، عروض PowerPoint وفيديوهات.'
+      )
+
+      setMetaTag(
+        'property',
+        'og:title',
+        'CEM Sciences | علوم الطبيعة والحياة للتعليم المتوسط'
+      )
+
+      setMetaTag(
+        'property',
+        'og:description',
+        'منصة تعليمية لعلوم الطبيعة والحياة للتعليم المتوسط: مذكرات، فروض، اختبارات، تمارين، ملخصات وعروض.'
+      )
+
+      setMetaTag(
+        'property',
+        'og:url',
+        'https://cem-sciences.com/'
+      )
+
+      setMetaTag(
+        'name',
+        'twitter:title',
+        'CEM Sciences | علوم الطبيعة والحياة للتعليم المتوسط'
+      )
+
+      setMetaTag(
+        'name',
+        'twitter:description',
+        'منصة تعليمية لعلوم الطبيعة والحياة للتعليم المتوسط.'
+      )
+    }
+  }, [lesson, id])
+
   if (loading) {
     return (
       <>
         <Navbar />
+
         <main className="page">
           <h2 style={{ textAlign: 'center' }}>
             جاري تحميل الملف...
           </h2>
         </main>
+
         <Footer />
       </>
     )
@@ -168,6 +272,7 @@ function LessonDetails() {
     return (
       <>
         <Navbar />
+
         <main className="page">
           <h1 className="level-title">الملف غير موجود</h1>
 
@@ -179,6 +284,7 @@ function LessonDetails() {
             </Link>
           </div>
         </main>
+
         <Footer />
       </>
     )
@@ -189,6 +295,22 @@ function LessonDetails() {
   const backPath = lesson.term
     ? `/${lesson.level}/${lesson.section}/${lesson.term}`
     : `/${lesson.level}/${lesson.section}`
+
+  const levelName =
+    levelNames[lesson.level] || 'التعليم المتوسط'
+
+  const sectionName =
+    sectionNames[lesson.section] || 'ملفات العلوم الطبيعية'
+
+  const termName = lesson.term
+    ? termNames[lesson.term]
+    : ''
+
+  const generatedDescription =
+    lesson.description ||
+    `${sectionName} في مادة علوم الطبيعة والحياة للسنة ${levelName}${
+      termName ? `، ${termName}` : ''
+    }.`
 
   return (
     <>
@@ -202,8 +324,8 @@ function LessonDetails() {
             color: '#666',
           }}
         >
-          {levelNames[lesson.level]} — {sectionNames[lesson.section]}
-          {lesson.term ? ` — ${termNames[lesson.term]}` : ''}
+          {levelName} — {sectionName}
+          {termName ? ` — ${termName}` : ''}
         </p>
 
         <h1
@@ -217,18 +339,16 @@ function LessonDetails() {
           {lesson.title}
         </h1>
 
-        {lesson.description && (
-          <p
-            style={{
-              textAlign: 'center',
-              maxWidth: '800px',
-              margin: '0 auto 25px',
-              lineHeight: 1.8,
-            }}
-          >
-            {lesson.description}
-          </p>
-        )}
+        <p
+          style={{
+            textAlign: 'center',
+            maxWidth: '800px',
+            margin: '0 auto 25px',
+            lineHeight: 1.8,
+          }}
+        >
+          {generatedDescription}
+        </p>
 
         <div
           style={{

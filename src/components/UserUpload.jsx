@@ -176,7 +176,6 @@ function UserUpload() {
   const [level, setLevel] = useState('')
   const [section, setSection] = useState('')
   const [term, setTerm] = useState('')
-  const [youtubeUrl, setYoutubeUrl] = useState('')
   const [email, setEmail] = useState('')
   const [file, setFile] = useState(null)
   const [turnstileToken, setTurnstileToken] = useState('')
@@ -352,7 +351,6 @@ function UserUpload() {
             section,
             term: needsTerm ? term : null,
             file_url: uploadResult.key,
-            youtube: youtubeUrl || null,
             status: 'pending',
             user_email: email,
           },
@@ -371,7 +369,6 @@ function UserUpload() {
       setLevel('')
       setSection('')
       setTerm('')
-      setYoutubeUrl('')
       setEmail('')
       setFile(null)
       setAcceptedUploadTerms(false)
@@ -529,18 +526,6 @@ function UserUpload() {
         )}
 
         <input
-          type="text"
-          placeholder="رابط فيديو YouTube (اختياري)"
-          value={youtubeUrl}
-          disabled={loading}
-          onChange={e => setYoutubeUrl(e.target.value)}
-          style={{
-            width: '100%',
-            marginBottom: '15px',
-          }}
-        />
-
-        <input
           type="email"
           placeholder="بريدك الإلكتروني ليصلك إشعار القبول أو الرفض"
           value={email}
@@ -617,10 +602,9 @@ function UserUpload() {
           />
 
           <span>
-            أؤكد أنني أملك حقوق نشر هذا الملف أو لدي
-            إذن صريح بنشره، وأتعهد بعدم رفع محتوى مخالف
-            أو مسيء أو محمي بحقوق النشر دون إذن.
-            {' '}
+            أؤكد أنني أملك حقوق نشر هذا الملف أو لدي إذن صريح
+            بنشره، وأتعهد بعدم رفع محتوى مخالف أو مسيء أو محمي
+            بحقوق النشر دون إذن.{' '}
             <a
               href="/terms"
               target="_blank"

@@ -190,6 +190,19 @@ const sectionConfig = {
   },
 }
 
+const levelShortNames = {
+  first: '1 متوسط',
+  second: '2 متوسط',
+  third: '3 متوسط',
+  fourth: '4 متوسط',
+}
+
+const termNumbers = {
+  term1: '1',
+  term2: '2',
+  term3: '3',
+}
+
 function getFileExtension(fileName) {
   return fileName.split('.').pop()?.toLowerCase() || ''
 }
@@ -198,8 +211,17 @@ function getTitleFromFileName(fileName) {
   return fileName.replace(/\.[^/.]+$/, '')
 }
 
-function makeTopicTitle(topicNumber) {
-  return `الموضوع رقم ${String(topicNumber).padStart(2, '0')}`
+function makeTopicTitle(topicNumber, level, section, term) {
+  const sectionLabel =
+    section === 'tests' ? 'فروض' : 'اختبارات'
+
+  const termNumber = termNumbers[term] || ''
+  const levelName = levelShortNames[level] || ''
+
+  return `النموذج - ${String(topicNumber).padStart(
+    2,
+    '0'
+  )} - ${sectionLabel} الفصل ${termNumber} - علوم الطبيعة والحياة - ${levelName}`
 }
 
 function isArchiveFile(fileName) {
@@ -303,7 +325,7 @@ function Admin() {
 
     const confirmed = window.confirm(
       needsTerm
-        ? `سيتم رفع ${files.length} ملفًا في قسم: ${currentConfig.label}.\n\nسيتم ترقيم الملفات تلقائيًا. هل تريد المتابعة؟`
+        ? `سيتم رفع ${files.length} ملفًا في قسم: ${currentConfig.label}.\n\nسيتم ترقيم الملفات تلقائيًا وتسمية كل ملف حسب المستوى والفصل. هل تريد المتابعة؟`
         : `سيتم رفع ${files.length} ملفًا في قسم: ${currentConfig.label}.\n\nكل ملف سيُحفظ باسمه الأصلي. هل تريد المتابعة؟`
     )
 
@@ -348,7 +370,12 @@ function Admin() {
             )
           }
 
-          lessonTitle = makeTopicTitle(topicNumber)
+          lessonTitle = makeTopicTitle(
+            topicNumber,
+            level,
+            section,
+            term
+          )
         }
 
         const lesson = {
@@ -381,9 +408,7 @@ function Admin() {
         }
 
         uploadResults.push({
-          fileName: needsTerm
-            ? lessonTitle
-            : file.name,
+          fileName: lessonTitle,
           success: true,
         })
       } catch (err) {
@@ -667,7 +692,7 @@ function Admin() {
           )}
         </div>
 
-                <AdminUserUploads />
+        <AdminUserUploads />
 
         <AdminFiles />
       </div>

@@ -141,7 +141,7 @@ function PdfSection({ lessons }) {
                 <div style={{ minWidth: 0 }}>
                   <Link
                     to={`/lesson/${lesson.id}`}
-                    title="اضغط لعرض تفاصيل الملف"
+                    title={lesson.title}
                     style={{
                       display: 'block',
                       fontWeight: 'bold',
