@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CEM Sciences</string>
+    <string name="title_activity_main">CEM Sciences</string>
+    <string name="package_name">com.cemsciences.app</string>
+    <string name="custom_url_scheme">com.cemsciences.app</string>
+</resources>

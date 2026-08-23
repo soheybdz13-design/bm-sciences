@@ -1,0 +1,12 @@
+{
+  "appId": "com.cemsciences.app",
+  "appName": "CEM Sciences",
+  "webDir": "dist",
+  "plugins": {
+    "StatusBar": {
+      "backgroundColor": "#1B5E20",
+      "style": "LIGHT",
+      "overlaysWebView": false
+    }
+  }
+}

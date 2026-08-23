@@ -1,9 +1,10 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { App as CapacitorApp } from '@capacitor/app'
+import { Capacitor } from '@capacitor/core'
 import { supabase } from './lib/supabaseClient'
 import './App.css'
 
-// الصفحات
 import Home from './pages/Home'
 import First from './pages/First'
 import Second from './pages/Second'
@@ -19,14 +20,14 @@ import AllLessons from './pages/AllLessons'
 import ResetPassword from './pages/ResetPassword'
 import LessonDetails from './pages/LessonDetails'
 
-// الصفحات القانونية
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Disclaimer from './pages/Disclaimer'
 
-function App() {
+function AppRoutes() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -36,12 +37,36 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession)
     })
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return undefined
+    }
+
+    const listener = CapacitorApp.addListener(
+      'backButton',
+      ({ canGoBack }) => {
+        if (canGoBack) {
+          window.history.back()
+          return
+        }
+
+        if (window.location.pathname !== '/') {
+          navigate(-1)
+        }
+      }
+    )
+
+    return () => {
+      listener.then(handle => handle.remove())
+    }
+  }, [navigate])
 
   if (loading) {
     return (
@@ -53,32 +78,26 @@ function App() {
 
   return (
     <Routes>
-      {/* الصفحة الرئيسية */}
       <Route path="/" element={<Home />} />
 
-      {/* المستويات */}
       <Route path="/first" element={<First />} />
       <Route path="/second" element={<Second />} />
       <Route path="/third" element={<Third />} />
       <Route path="/fourth" element={<Fourth />} />
 
-      {/* صفحة الدروس حسب المستوى */}
       <Route
         path="/lessons/:level"
         element={<Lessons />}
       />
 
-      {/* صفحة كل الدروس والملفات */}
       <Route
         path="/all-lessons"
         element={<AllLessons />}
       />
 
-      {/* الصفحات الأخرى */}
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
 
-      {/* الصفحات القانونية */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route
@@ -86,16 +105,13 @@ function App() {
         element={<Disclaimer />}
       />
 
-      {/* تسجيل الدخول للإدارة */}
       <Route path="/login" element={<Login />} />
 
-      {/* إعادة تعيين كلمة المرور */}
       <Route
         path="/reset-password"
         element={<ResetPassword />}
       />
 
-      {/* لوحة الإدارة */}
       <Route
         path="/admin"
         element={
@@ -107,13 +123,11 @@ function App() {
         }
       />
 
-      {/* صفحة تفاصيل ملف واحد */}
       <Route
         path="/lesson/:id"
         element={<LessonDetails />}
       />
 
-      {/* صفحات الأقسام والملفات */}
       <Route
         path="/:level/:section/:term"
         element={<LevelPage />}
@@ -124,10 +138,11 @@ function App() {
         element={<LevelPage />}
       />
 
-      {/* أي رابط غير موجود يرجع للرئيسية */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
 
-export default App
+export default function App() {
+  return <AppRoutes />
+}
