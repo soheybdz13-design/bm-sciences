@@ -235,7 +235,7 @@ function AdminUserUploads() {
     if (processingId) return
 
     const ok = window.confirm(
-      `هل تريد قبول هذا الملف وإضافته للموقع؟\nالعنوان الحالي: "${item.title}"`
+      `هل تريد قبول هذا الملف وإضافته للموقع؟\n\nالعنوان: "${item.title}"\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}`
     )
 
     if (!ok) return
@@ -346,7 +346,10 @@ function AdminUserUploads() {
 
       const { error: updateError } = await supabase
         .from('user_uploads')
-        .update({ status: 'approved' })
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+        })
         .eq('id', item.id)
 
       if (updateError) {
@@ -375,15 +378,16 @@ function AdminUserUploads() {
 
       if (notification.success) {
         alert(
-          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nتم إرسال إشعار القبول إلى الزائر ✅`
+          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}\nتم إرسال إشعار القبول إلى الزائر ✅`
         )
       } else {
         alert(
-          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nلكن تعذر إرسال الإيميل: ${notification.message}`
+          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}\nلكن تعذر إرسال الإيميل: ${notification.message}`
         )
       }
     } catch (err) {
       console.error('APPROVE ERROR:', err)
+
       alert(
         err.message || 'وقع خطأ غير متوقع أثناء قبول الملف'
       )
@@ -396,7 +400,7 @@ function AdminUserUploads() {
     if (processingId) return
 
     const ok = window.confirm(
-      `هل تريد رفض هذا الملف؟\nالعنوان: "${item.title}"`
+      `هل تريد رفض هذا الملف؟\n\nالعنوان: "${item.title}"\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}`
     )
 
     if (!ok) return
@@ -427,6 +431,7 @@ function AdminUserUploads() {
         .update({
           status: 'rejected',
           reject_reason: reason || null,
+          reviewed_at: new Date().toISOString(),
         })
         .eq('id', item.id)
 
@@ -447,11 +452,11 @@ function AdminUserUploads() {
 
       if (notification.success) {
         alert(
-          'تم رفض الملف وحفظ سبب الرفض.\nتم إرسال إشعار الرفض إلى الزائر ✅'
+          `تم رفض الملف وحفظ سبب الرفض.\n\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}\nتم إرسال إشعار الرفض إلى الزائر ✅`
         )
       } else {
         alert(
-          `تم رفض الملف وحفظ سبب الرفض.\nلكن تعذر إرسال الإيميل: ${notification.message}`
+          `تم رفض الملف وحفظ سبب الرفض.\n\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}\nلكن تعذر إرسال الإيميل: ${notification.message}`
         )
       }
     } catch (err) {
@@ -500,12 +505,13 @@ function AdminUserUploads() {
             style={{
               width: '100%',
               borderCollapse: 'collapse',
-              minWidth: '760px',
+              minWidth: '900px',
             }}
           >
             <thead>
               <tr>
                 <th>العنوان</th>
+                <th>المرسل</th>
                 <th>المستوى</th>
                 <th>القسم</th>
                 <th>الفصل</th>
@@ -524,6 +530,16 @@ function AdminUserUploads() {
                 return (
                   <tr key={item.id}>
                     <td>{item.title || 'بدون عنوان'}</td>
+
+                    <td
+                      style={{
+                        direction: 'ltr',
+                        textAlign: 'left',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {item.user_email || 'إيميل غير متوفر'}
+                    </td>
 
                     <td>
                       {levelLabels[item.level] || item.level}
@@ -569,7 +585,9 @@ function AdminUserUploads() {
                     <td>
                       <button
                         type="button"
-                        disabled={isProcessing || processingId !== null}
+                        disabled={
+                          isProcessing || processingId !== null
+                        }
                         style={{
                           background: '#1b5e20',
                           color: '#fff',
@@ -577,11 +595,13 @@ function AdminUserUploads() {
                           padding: '6px 10px',
                           borderRadius: '6px',
                           cursor:
-                            isProcessing || processingId !== null
+                            isProcessing ||
+                            processingId !== null
                               ? 'not-allowed'
                               : 'pointer',
                           opacity:
-                            isProcessing || processingId !== null
+                            isProcessing ||
+                            processingId !== null
                               ? 0.6
                               : 1,
                           marginRight: '8px',
@@ -595,7 +615,9 @@ function AdminUserUploads() {
 
                       <button
                         type="button"
-                        disabled={isProcessing || processingId !== null}
+                        disabled={
+                          isProcessing || processingId !== null
+                        }
                         style={{
                           background: '#c62828',
                           color: '#fff',
@@ -603,11 +625,13 @@ function AdminUserUploads() {
                           padding: '6px 10px',
                           borderRadius: '6px',
                           cursor:
-                            isProcessing || processingId !== null
+                            isProcessing ||
+                            processingId !== null
                               ? 'not-allowed'
                               : 'pointer',
                           opacity:
-                            isProcessing || processingId !== null
+                            isProcessing ||
+                            processingId !== null
                               ? 0.6
                               : 1,
                         }}
