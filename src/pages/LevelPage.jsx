@@ -65,8 +65,7 @@ function LevelPage() {
     term3: 'الفصل الثالث',
   }
 
-  const hasTerms =
-    section === 'tests' || section === 'exams'
+  const hasTerms = section === 'tests' || section === 'exams'
 
   useEffect(() => {
     if (hasTerms && !term) {
@@ -101,22 +100,20 @@ function LevelPage() {
         return
       }
 
-      const sortedLessons = [...(data || [])].sort(
-        (a, b) => {
-          const numberA = getLastNumber(a.title)
-          const numberB = getLastNumber(b.title)
+      const sortedLessons = [...(data || [])].sort((a, b) => {
+        const numberA = getLastNumber(a.title)
+        const numberB = getLastNumber(b.title)
 
-          if (numberA !== numberB) {
-            return numberB - numberA
-          }
-
-          return b.title.localeCompare(a.title, 'ar')
+        if (numberA !== numberB) {
+          return numberB - numberA
         }
-      )
+
+        return b.title.localeCompare(a.title, 'ar')
+      })
 
       setLessons(sortedLessons)
-    } catch (err) {
-      console.error(err)
+    } catch (error) {
+      console.error(error)
       setLessons([])
     } finally {
       setLoading(false)
@@ -145,8 +142,7 @@ function LevelPage() {
   }
 
   function renderTerms() {
-    const prefix =
-      section === 'tests' ? 'فروض' : 'اختبارات'
+    const prefix = section === 'tests' ? 'فروض' : 'اختبارات'
 
     return (
       <div className="sections-grid">
@@ -179,9 +175,7 @@ function LevelPage() {
       <Navbar />
 
       <div className="page">
-        <h1 className="level-title">
-          {levelNames[level]}
-        </h1>
+        <h1 className="level-title">{levelNames[level]}</h1>
 
         <h2
           style={{
@@ -200,8 +194,16 @@ function LevelPage() {
             جاري تحميل الملفات...
           </h3>
         ) : lessons.length === 0 ? (
-          <h3 style={{ textAlign: 'center' }}>
-            لا توجد ملفات في هذا القسم.
+          <h3
+            style={{
+              textAlign: 'center',
+              maxWidth: '700px',
+              margin: '0 auto',
+              lineHeight: 1.9,
+            }}
+          >
+            فهرس الملفات في صيانة تقنية مؤقتة. الملفات محفوظة وآمنة وستعود
+            قريبًا.
           </h3>
         ) : (
           renderContent()

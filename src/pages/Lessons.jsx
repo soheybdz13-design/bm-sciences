@@ -1,4 +1,3 @@
-// src/pages/Lessons.jsx
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
@@ -31,21 +30,27 @@ function Lessons() {
   async function loadLessons() {
     setLoading(true)
 
-    const { data, error } = await supabase
-      .from('lessons')
-      .select('*')
-      .eq('level', level)
-      .order('year', { ascending: false })
-      .order('id', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('level', level)
+        .order('year', { ascending: false })
+        .order('id', { ascending: false })
 
-    if (error) {
-      console.error(error)
-      alert('وقع خطأ أثناء جلب الملفات')
-    } else {
+      if (error) {
+        console.error(error)
+        setLessons([])
+        return
+      }
+
       setLessons(data || [])
+    } catch (error) {
+      console.error(error)
+      setLessons([])
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   const filteredLessons = lessons.filter(lesson =>
@@ -63,7 +68,6 @@ function Lessons() {
 
         <h2 className="page-subtitle">جميع ملفات PDF</h2>
 
-        {/* مربع البحث */}
         <div className="search-box">
           <FaSearch className="search-icon" />
           <input
@@ -77,21 +81,19 @@ function Lessons() {
         {loading ? (
           <div className="loading">جاري تحميل الملفات...</div>
         ) : filteredLessons.length === 0 ? (
-          <div className="loading">لا توجد ملفات</div>
+          <div className="loading">
+            فهرس الملفات في صيانة تقنية مؤقتة. الملفات محفوظة وآمنة وستعود
+            قريبًا.
+          </div>
         ) : (
           <div className="files-list">
             {filteredLessons.map(lesson => (
-              <div
-                key={lesson.id}
-                className="file-row"
-              >
-                {/* السنة */}
+              <div key={lesson.id} className="file-row">
                 <div className="file-year">
                   <FaCalendarAlt />
                   {lesson.year}
                 </div>
 
-                {/* عنوان + مادة */}
                 <div className="file-info">
                   <h3>
                     <FaFilePdf
@@ -106,9 +108,7 @@ function Lessons() {
                   {lesson.subject && <p>{lesson.subject}</p>}
                 </div>
 
-                {/* الأزرار */}
                 <div className="file-actions">
-                  {/* معاينة داخل الموقع */}
                   <button
                     className="preview-btn"
                     onClick={() => setSelectedPdf(lesson.pdf)}
@@ -117,7 +117,6 @@ function Lessons() {
                     معاينة PDF
                   </button>
 
-                  {/* فتح الملف في تبويب جديد (منه يقدر يحفظه) */}
                   <a
                     href={lesson.pdf}
                     target="_blank"
@@ -134,7 +133,6 @@ function Lessons() {
         )}
       </div>
 
-      {/* نافذة المعاينة داخل الموقع */}
       {selectedPdf && (
         <PdfViewer
           pdf={selectedPdf}

@@ -274,10 +274,21 @@ function LessonDetails() {
         <Navbar />
 
         <main className="page">
-          <h1 className="level-title">الملف غير موجود</h1>
+          <h1 className="level-title">
+            الملف غير متاح مؤقتًا
+          </h1>
 
-          <div style={{ textAlign: 'center' }}>
-            <p>ربما تم حذف الملف أو أن الرابط غير صحيح.</p>
+          <div
+            style={{
+              textAlign: 'center',
+              maxWidth: '700px',
+              margin: '0 auto',
+              lineHeight: 1.9,
+            }}
+          >
+            <p>
+              فهرس الدروس في صيانة تقنية مؤقتة. ملفات المنصة محفوظة وآمنة.
+            </p>
 
             <Link to="/" className="lesson-btn">
               العودة للرئيسية
