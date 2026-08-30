@@ -1,6 +1,3 @@
-import { useEffect } from 'react'
-import { Capacitor } from '@capacitor/core'
-import { App as CapacitorApp } from '@capacitor/app'
 import './App.css'
 
 function MaintenancePage() {
@@ -103,20 +100,5 @@ function MaintenancePage() {
 }
 
 export default function App() {
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) {
-      return undefined
-    }
-
-    const listener = CapacitorApp.addListener(
-      'backButton',
-      () => {}
-    )
-
-    return () => {
-      listener.then(handle => handle.remove())
-    }
-  }, [])
-
   return <MaintenancePage />
 }
