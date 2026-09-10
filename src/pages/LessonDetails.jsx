@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { supabase } from '../lib/supabaseClient'
+import { getLessonById } from '../api'
 import { getFileUrl, isArchiveFile } from '../utils/fileUrl'
 
 const levelNames = {
@@ -145,18 +145,7 @@ function LessonDetails() {
     try {
       setLoading(true)
 
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (error) {
-        console.error(error)
-        setLesson(null)
-        return
-      }
-
+      const data = await getLessonById(id)
       setLesson(data)
     } catch (error) {
       console.error(error)
@@ -286,9 +275,7 @@ function LessonDetails() {
               lineHeight: 1.9,
             }}
           >
-            <p>
-              فهرس الدروس في صيانة تقنية مؤقتة. ملفات المنصة محفوظة وآمنة.
-            </p>
+            <p>الملف غير موجود أو لا يمكن تحميله حاليًا.</p>
 
             <Link to="/" className="lesson-btn">
               العودة للرئيسية

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { supabase } from '../lib/supabaseClient'
+import { getLessonsByLevel } from '../api'
 
 import PdfSection from '../components/PdfSection'
 import WordSection from '../components/WordSection'
@@ -81,24 +81,7 @@ function LevelPage() {
     try {
       setLoading(true)
 
-      let query = supabase
-        .from('lessons')
-        .select('*')
-        .eq('level', level)
-        .eq('section', section)
-        .order('created_at', { ascending: false })
-
-      if (term) {
-        query = query.eq('term', term)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error(error)
-        setLessons([])
-        return
-      }
+      const data = await getLessonsByLevel(level, section, term)
 
       const sortedLessons = [...(data || [])].sort((a, b) => {
         const numberA = getLastNumber(a.title)
@@ -108,7 +91,7 @@ function LevelPage() {
           return numberB - numberA
         }
 
-        return b.title.localeCompare(a.title, 'ar')
+        return (b.title || '').localeCompare(a.title || '', 'ar')
       })
 
       setLessons(sortedLessons)
@@ -202,8 +185,7 @@ function LevelPage() {
               lineHeight: 1.9,
             }}
           >
-            فهرس الملفات في صيانة تقنية مؤقتة. الملفات محفوظة وآمنة وستعود
-            قريبًا.
+            لا توجد ملفات في هذا القسم حاليًا.
           </h3>
         ) : (
           renderContent()

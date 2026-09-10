@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { getAllLessons } from '../api'
 import LessonCard from '../components/LessonCard'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -16,17 +16,7 @@ function AllLessons() {
     setLoading(true)
 
     try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .order('id', { ascending: false })
-
-      if (error) {
-        console.error(error)
-        setLessons([])
-        return
-      }
-
+      const data = await getAllLessons()
       setLessons(data || [])
     } catch (error) {
       console.error(error)
@@ -54,8 +44,7 @@ function AllLessons() {
               margin: '30px auto',
             }}
           >
-            فهرس الدروس في صيانة تقنية مؤقتة. الملفات محفوظة وآمنة وستعود
-            قريبًا.
+            لا توجد ملفات متاحة حاليًا.
           </p>
         ) : (
           lessons.map(lesson => (
