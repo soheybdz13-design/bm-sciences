@@ -1,0 +1,7 @@
+name = "bm-sciences-upload"
+main = "worker.upload.js"
+compatibility_date = "2026-09-09"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "bm-sciences-files"

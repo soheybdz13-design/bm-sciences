@@ -1,7 +1,7 @@
 import { supabase } from './lib/supabaseClient'
 
 const API_URL =
-  'https://bm-sciences-api.soheybdz13.workers.dev'
+  'https://api.cem-sciences.com'
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, options)
