@@ -1,11 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
 
-const WORKER_URL =
-  'https://upload.cem-sciences.com'
+const WORKER_URL = 'https://upload.cem-sciences.com'
 
-const TURNSTILE_SITE_KEY =
-  '0x4AAAAAAEKSC4sa6IMYEu-1'
+const TURNSTILE_SITE_KEY = '0x4AAAAAAEKSC4sa6IMYEu-1'
 
 const ARCHIVE_ACCEPT =
   '.zip,.rar,application/zip,application/x-zip-compressed,application/vnd.rar,application/x-rar-compressed,application/octet-stream'
@@ -257,8 +254,8 @@ function UserUpload() {
     document.head.appendChild(script)
   }, [])
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function handleSubmit(event) {
+    event.preventDefault()
 
     if (!level || !section) {
       alert('اختر المستوى والقسم')
@@ -275,7 +272,7 @@ function UserUpload() {
       return
     }
 
-    if (!email) {
+    if (!email.trim()) {
       alert(
         'أدخل بريدك الإلكتروني ليصلك إشعار القبول أو الرفض'
       )
@@ -289,6 +286,11 @@ function UserUpload() {
 
     if (!currentConfig) {
       alert('القسم المختار غير صالح')
+      return
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      alert('حجم الملف كبير. الحد الأقصى هو 100 MB.')
       return
     }
 
@@ -313,6 +315,10 @@ function UserUpload() {
       return
     }
 
+    const temporaryTitle = needsTerm
+      ? `موضوع ${term}`
+      : title.trim()
+
     try {
       setLoading(true)
 
@@ -325,12 +331,29 @@ function UserUpload() {
               file.type || 'application/octet-stream',
             'X-File-Name': encodeURIComponent(file.name),
             'X-Turnstile-Token': turnstileToken,
+            'X-Upload-Title': encodeURIComponent(
+              temporaryTitle
+            ),
+            'X-Upload-Email': encodeURIComponent(
+              email.trim().toLowerCase()
+            ),
+            'X-Upload-Level': encodeURIComponent(level),
+            'X-Upload-Section': encodeURIComponent(section),
+            'X-Upload-Term': encodeURIComponent(
+              needsTerm ? term : ''
+            ),
           },
           body: file,
         }
       )
 
-      const uploadResult = await uploadResponse.json()
+      let uploadResult = {}
+
+      try {
+        uploadResult = await uploadResponse.json()
+      } catch {
+        uploadResult = {}
+      }
 
       if (!uploadResponse.ok) {
         throw new Error(
@@ -338,32 +361,9 @@ function UserUpload() {
         )
       }
 
-      const temporaryTitle = needsTerm
-        ? 'موضوع'
-        : title.trim()
-
-      const { error } = await supabase
-        .from('user_uploads')
-        .insert([
-          {
-            title: temporaryTitle,
-            level,
-            section,
-            term: needsTerm ? term : null,
-            file_url: uploadResult.key,
-            status: 'pending',
-            user_email: email,
-          },
-        ])
-
-      if (error) {
-        throw new Error(
-          error.message ||
-            'تم رفع الملف لكن وقع خطأ أثناء حفظ بياناته'
-        )
-      }
-
-      alert('تم إرسال ملفك للمراجعة، شكرًا لك!')
+      alert(
+        'تم إرسال ملفك للمراجعة بنجاح، شكرًا لك!'
+      )
 
       setTitle('')
       setLevel('')
@@ -372,11 +372,16 @@ function UserUpload() {
       setEmail('')
       setFile(null)
       setAcceptedUploadTerms(false)
-      setFileInputKey(prev => prev + 1)
+      setFileInputKey(previous => previous + 1)
       resetTurnstile()
-    } catch (err) {
-      console.error('USER UPLOAD ERROR:', err)
-      alert(err.message || 'وقع خطأ غير متوقع')
+    } catch (error) {
+      console.error('USER UPLOAD ERROR:', error)
+
+      alert(
+        error.message ||
+          'وقع خطأ غير متوقع أثناء إرسال الملف'
+      )
+
       resetTurnstile()
     } finally {
       setLoading(false)
@@ -400,7 +405,9 @@ function UserUpload() {
             }
             value={title}
             disabled={loading}
-            onChange={e => setTitle(e.target.value)}
+            onChange={event =>
+              setTitle(event.target.value)
+            }
             style={{
               width: '100%',
               marginBottom: '15px',
@@ -411,8 +418,8 @@ function UserUpload() {
         <select
           value={level}
           disabled={loading}
-          onChange={e => {
-            const selectedLevel = e.target.value
+          onChange={event => {
+            const selectedLevel = event.target.value
 
             setLevel(selectedLevel)
 
@@ -432,7 +439,7 @@ function UserUpload() {
 
             setTerm('')
             setFile(null)
-            setFileInputKey(prev => prev + 1)
+            setFileInputKey(previous => previous + 1)
             resetTurnstile()
           }}
           style={{
@@ -450,11 +457,11 @@ function UserUpload() {
         <select
           value={section}
           disabled={loading}
-          onChange={e => {
-            setSection(e.target.value)
+          onChange={event => {
+            setSection(event.target.value)
             setTerm('')
             setFile(null)
-            setFileInputKey(prev => prev + 1)
+            setFileInputKey(previous => previous + 1)
             resetTurnstile()
           }}
           style={{
@@ -512,7 +519,9 @@ function UserUpload() {
           <select
             value={term}
             disabled={loading}
-            onChange={e => setTerm(e.target.value)}
+            onChange={event =>
+              setTerm(event.target.value)
+            }
             style={{
               width: '100%',
               marginBottom: '15px',
@@ -530,7 +539,7 @@ function UserUpload() {
           placeholder="بريدك الإلكتروني ليصلك إشعار القبول أو الرفض"
           value={email}
           disabled={loading}
-          onChange={e => setEmail(e.target.value)}
+          onChange={event => setEmail(event.target.value)}
           style={{
             width: '100%',
             marginBottom: '15px',
@@ -553,8 +562,8 @@ function UserUpload() {
           type="file"
           accept={currentConfig?.accept || '*/*'}
           disabled={loading || !currentConfig}
-          onChange={e =>
-            setFile(e.target.files?.[0] || null)
+          onChange={event =>
+            setFile(event.target.files?.[0] || null)
           }
           style={{ marginBottom: '20px' }}
         />
@@ -590,8 +599,8 @@ function UserUpload() {
             type="checkbox"
             checked={acceptedUploadTerms}
             disabled={loading}
-            onChange={e =>
-              setAcceptedUploadTerms(e.target.checked)
+            onChange={event =>
+              setAcceptedUploadTerms(event.target.checked)
             }
             style={{
               width: '18px',
@@ -633,7 +642,8 @@ function UserUpload() {
               loading || !turnstileToken
                 ? 'not-allowed'
                 : 'pointer',
-            opacity: loading || !turnstileToken ? 0.6 : 1,
+            opacity:
+              loading || !turnstileToken ? 0.6 : 1,
             fontSize: '18px',
           }}
         >
