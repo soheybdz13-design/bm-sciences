@@ -1,26 +1,8 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { useRef, useState } from 'react'
+import { createAdminLesson } from '../api'
+import { uploadToR2 } from '../services/uploadToR2'
 
-async function uploadToBucket(bucket, file) {
-  if (!file) return null
-
-  const path = `lessons/${Date.now()}_${file.name}`
-
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(path, file)
-
-  if (error) {
-    console.error(`خطأ في رفع ${bucket}:`, error)
-    throw error
-  }
-
-  const { data } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(path)
-
-  return data.publicUrl
-}
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 
 const levelLabels = {
   first: 'السنة الأولى متوسط',
@@ -41,13 +23,42 @@ const termLabels = {
 }
 
 function makeTopicTitle(topicNumber, level, section, term) {
-  const formattedNumber = String(topicNumber).padStart(2, '0')
+  const formattedNumber = String(topicNumber).padStart(
+    2,
+    '0'
+  )
 
   return (
     `النموذج رقم ${formattedNumber} - ` +
     `${topicSectionLabels[section]} ${termLabels[term]} ` +
     `في علوم الطبيعة والحياة - ${levelLabels[level]}`
   )
+}
+
+function getArabicTopicNumber(title = '') {
+  const match = String(title).match(/رقم\s*([0-9٠-٩]+)/)
+
+  if (!match) {
+    return 0
+  }
+
+  const westernDigits = match[1].replace(
+    /[٠-٩]/g,
+    digit => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)
+  )
+
+  return Number(westernDigits) || 0
+}
+
+function isAllowedFile(file, allowedExtensions) {
+  if (!file) {
+    return true
+  }
+
+  const extension =
+    file.name.split('.').pop()?.toLowerCase() || ''
+
+  return allowedExtensions.includes(extension)
 }
 
 export default function UploadCard() {
@@ -63,57 +74,132 @@ export default function UploadCard() {
 
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState('')
+
+  const pdfInputRef = useRef(null)
+  const videoInputRef = useRef(null)
+  const imageInputRef = useRef(null)
+  const wordInputRef = useRef(null)
 
   const needsTerm =
     section === 'tests' || section === 'exams'
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  function resetForm() {
+    setTitle('')
+    setLevel('')
+    setSection('')
+    setTerm('')
+    setPdfFile(null)
+    setVideoFile(null)
+    setImageFile(null)
+    setWordFile(null)
+
+    if (pdfInputRef.current) {
+      pdfInputRef.current.value = ''
+    }
+
+    if (videoInputRef.current) {
+      videoInputRef.current.value = ''
+    }
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = ''
+    }
+
+    if (wordInputRef.current) {
+      wordInputRef.current.value = ''
+    }
+  }
+
+  function validateFile(file, label, extensions) {
+    if (!file) {
+      return
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      throw new Error(
+        `${label}: حجم الملف أكبر من الحد الأقصى 100 MB.`
+      )
+    }
+
+    if (!isAllowedFile(file, extensions)) {
+      throw new Error(
+        `${label}: نوع الملف غير مسموح.`
+      )
+    }
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+
     setLoading(true)
     setMessage('')
+    setMessageType('')
 
     try {
       if (!level || !section) {
-        throw new Error('اختر المستوى والقسم')
+        throw new Error('اختر المستوى والقسم.')
       }
 
       if (!needsTerm && !title.trim()) {
-        throw new Error('اكتب عنوان الدرس')
+        throw new Error('اكتب عنوان الدرس.')
       }
 
       if (needsTerm && !term) {
-        throw new Error('اختر الفصل للفروض أو الاختبارات')
+        throw new Error(
+          'اختر الفصل للفروض أو الاختبارات.'
+        )
       }
 
       if (needsTerm && !pdfFile) {
-        throw new Error('اختر ملف PDF للفروض أو الاختبارات')
+        throw new Error(
+          'اختر ملف PDF للفروض أو الاختبارات.'
+        )
       }
+
+      validateFile(
+        pdfFile,
+        'ملف PDF',
+        ['pdf']
+      )
+
+      validateFile(
+        videoFile,
+        'ملف الفيديو',
+        ['mp4', 'webm', 'mov']
+      )
+
+      validateFile(
+        imageFile,
+        'ملف الصورة',
+        ['jpg', 'jpeg', 'png', 'webp', 'gif']
+      )
+
+      validateFile(
+        wordFile,
+        'ملف Word',
+        ['doc', 'docx']
+      )
 
       let finalTitle = title.trim()
 
       if (needsTerm) {
-        const { data: topicNumber, error } = await supabase.rpc(
-          'next_topic_number',
-          {
-            p_level: level,
-            p_section: section,
-            p_term: term,
-          }
+        const existingLessons = await import('../api').then(
+          module =>
+            module.getLessonsByLevel(level, section, term)
         )
 
-        if (error) {
-          console.error(
-            'ERROR getting next topic number:',
-            error
-          )
-
-          throw new Error(
-            `تعذر الحصول على رقم النموذج التالي: ${error.message}`
-          )
-        }
+        const lastTopicNumber = (existingLessons || []).reduce(
+          (maximum, lesson) =>
+            Math.max(
+              maximum,
+              getArabicTopicNumber(lesson.title)
+            ),
+          0
+        )
 
         finalTitle = makeTopicTitle(
-          topicNumber,
+          lastTopicNumber + 1,
           level,
           section,
           term
@@ -121,52 +207,45 @@ export default function UploadCard() {
       }
 
       const [pdf, video, image, word] = await Promise.all([
-        uploadToBucket('pdfs', pdfFile),
-        uploadToBucket('videos', videoFile),
-        uploadToBucket('images', imageFile),
-        uploadToBucket('words', wordFile),
+        pdfFile ? uploadToR2(pdfFile) : Promise.resolve(null),
+        videoFile
+          ? uploadToR2(videoFile)
+          : Promise.resolve(null),
+        imageFile
+          ? uploadToR2(imageFile)
+          : Promise.resolve(null),
+        wordFile
+          ? uploadToR2(wordFile)
+          : Promise.resolve(null),
       ])
 
-      const { error: insertError } = await supabase
-        .from('lessons')
-        .insert({
-          title: finalTitle,
-          level,
-          section,
-          term: needsTerm ? term : null,
-          pdf,
-          video,
-          image,
-          word,
-        })
+      await createAdminLesson({
+        title: finalTitle,
+        level,
+        section,
+        term: needsTerm ? term : null,
+        pdf: pdf || '',
+        video: video || '',
+        image: image || '',
+        word: word || '',
+        status: 'approved',
+      })
 
-      if (insertError) {
-        console.error(
-          'ERROR inserting into lessons:',
-          insertError
-        )
-        throw insertError
-      }
-
+      setMessageType('success')
       setMessage(
         needsTerm
-          ? `تم رفع الملف بنجاح باسم:\n${finalTitle} ✅`
-          : 'تم رفع الدرس والملفات بنجاح ✅'
+          ? `تم رفع وحفظ الملف بنجاح باسم:\n${finalTitle} ✅`
+          : 'تم رفع الدرس وحفظ الملفات بنجاح ✅'
       )
 
-      setTitle('')
-      setLevel('')
-      setSection('')
-      setTerm('')
-      setPdfFile(null)
-      setVideoFile(null)
-      setImageFile(null)
-      setWordFile(null)
-    } catch (err) {
-      console.error('UPLOAD ERROR:', err)
+      resetForm()
+    } catch (error) {
+      console.error('ADMIN UPLOAD ERROR:', error)
 
+      setMessageType('error')
       setMessage(
-        err.message || 'وقع خطأ أثناء الرفع أو الحفظ ❌'
+        error.message ||
+          'وقع خطأ أثناء رفع الملفات أو حفظ الدرس.'
       )
     } finally {
       setLoading(false)
@@ -188,7 +267,9 @@ export default function UploadCard() {
               type="text"
               value={title}
               disabled={loading}
-              onChange={e => setTitle(e.target.value)}
+              onChange={event =>
+                setTitle(event.target.value)
+              }
               placeholder="مثال: تمارين حول التغذية عند الإنسان"
               required
               style={{ width: '100%', padding: '8px' }}
@@ -202,7 +283,27 @@ export default function UploadCard() {
           <select
             value={level}
             disabled={loading}
-            onChange={e => setLevel(e.target.value)}
+            onChange={event => {
+              const selectedLevel = event.target.value
+
+              setLevel(selectedLevel)
+
+              if (
+                selectedLevel !== 'fourth' &&
+                section === 'bem'
+              ) {
+                setSection('')
+              }
+
+              if (
+                selectedLevel !== 'first' &&
+                section === 'support'
+              ) {
+                setSection('')
+              }
+
+              setTerm('')
+            }}
             required
             style={{ width: '100%', padding: '8px' }}
           >
@@ -220,8 +321,8 @@ export default function UploadCard() {
           <select
             value={section}
             disabled={loading}
-            onChange={e => {
-              setSection(e.target.value)
+            onChange={event => {
+              setSection(event.target.value)
               setTerm('')
             }}
             required
@@ -232,15 +333,45 @@ export default function UploadCard() {
             <option value="word">مذكرات Word</option>
             <option value="print">مطبوعات</option>
             <option value="videos">فيديوهات</option>
+            <option value="ppt">عروض PPT</option>
             <option value="tests">فروض</option>
             <option value="exams">اختبارات</option>
-            <option value="exercises">تمارين ووضعيات</option>
+
+            {level === 'fourth' && (
+              <option value="bem">مواضيع BEM</option>
+            )}
+
+            <option value="exercises">
+              تمارين ووضعيات
+            </option>
+
             <option value="summaries">ملخصات</option>
+
             <option value="draw">رسومات صماء</option>
+
             <option value="charts">مخططات</option>
+
             <option value="program">المنهاج</option>
+
             <option value="guide">الدليل</option>
-            <option value="support">المعالجة البيداغوجية</option>
+
+            <option value="teacher_documents">
+              تقويم تشخيصي ووثائق أخرى
+            </option>
+
+            {level === 'first' && (
+              <option value="support">
+                المعالجة البيداغوجية
+              </option>
+            )}
+
+            <option value="annual_progression">
+              التدرج السنوي
+            </option>
+
+            <option value="monthly_distribution">
+              التوزيع الشهري
+            </option>
           </select>
         </div>
 
@@ -251,9 +382,14 @@ export default function UploadCard() {
             <select
               value={term}
               disabled={loading}
-              onChange={e => setTerm(e.target.value)}
+              onChange={event =>
+                setTerm(event.target.value)
+              }
               required
-              style={{ width: '100%', padding: '8px' }}
+              style={{
+                width: '100%',
+                padding: '8px',
+              }}
             >
               <option value="">اختر الفصل</option>
               <option value="term1">الفصل الأول</option>
@@ -269,11 +405,12 @@ export default function UploadCard() {
           </label>
 
           <input
+            ref={pdfInputRef}
             type="file"
-            accept="application/pdf"
+            accept=".pdf,application/pdf"
             disabled={loading}
-            onChange={e =>
-              setPdfFile(e.target.files?.[0] || null)
+            onChange={event =>
+              setPdfFile(event.target.files?.[0] || null)
             }
           />
         </div>
@@ -282,11 +419,12 @@ export default function UploadCard() {
           <label>فيديو (اختياري)</label>
 
           <input
+            ref={videoInputRef}
             type="file"
-            accept="video/*"
+            accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime"
             disabled={loading}
-            onChange={e =>
-              setVideoFile(e.target.files?.[0] || null)
+            onChange={event =>
+              setVideoFile(event.target.files?.[0] || null)
             }
           />
         </div>
@@ -295,11 +433,12 @@ export default function UploadCard() {
           <label>صورة (اختياري)</label>
 
           <input
+            ref={imageInputRef}
             type="file"
-            accept="image/*"
+            accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
             disabled={loading}
-            onChange={e =>
-              setImageFile(e.target.files?.[0] || null)
+            onChange={event =>
+              setImageFile(event.target.files?.[0] || null)
             }
           />
         </div>
@@ -308,11 +447,12 @@ export default function UploadCard() {
           <label>ملف Word (اختياري)</label>
 
           <input
+            ref={wordInputRef}
             type="file"
             accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             disabled={loading}
-            onChange={e =>
-              setWordFile(e.target.files?.[0] || null)
+            onChange={event =>
+              setWordFile(event.target.files?.[0] || null)
             }
           />
         </div>
@@ -327,9 +467,12 @@ export default function UploadCard() {
             padding: '10px 20px',
             borderRadius: '6px',
             cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.7 : 1,
           }}
         >
-          {loading ? 'جارٍ الرفع...' : 'حفظ الدرس والملفات'}
+          {loading
+            ? 'جارٍ الرفع والحفظ...'
+            : 'حفظ الدرس والملفات'}
         </button>
       </form>
 
@@ -339,6 +482,10 @@ export default function UploadCard() {
             marginTop: '15px',
             fontWeight: 'bold',
             whiteSpace: 'pre-line',
+            color:
+              messageType === 'success'
+                ? '#1b5e20'
+                : '#c62828',
           }}
         >
           {message}
