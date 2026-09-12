@@ -7,6 +7,11 @@ import {
   FaTrash,
 } from 'react-icons/fa'
 import { supabase } from '../lib/supabaseClient'
+import {
+  deleteAdminLesson,
+  getAdminLessons,
+  updateAdminLesson,
+} from '../api'
 
 const R2_WORKER_URL =
   'https://upload.cem-sciences.com'
@@ -16,13 +21,6 @@ const levelLabels = {
   second: 'الثانية متوسط',
   third: 'الثالثة متوسط',
   fourth: 'الرابعة متوسط',
-}
-
-const titleLevelLabels = {
-  first: 'السنة الأولى متوسط',
-  second: 'السنة الثانية متوسط',
-  third: 'السنة الثالثة متوسط',
-  fourth: 'السنة الرابعة متوسط',
 }
 
 const sectionLabels = {
@@ -46,17 +44,6 @@ const sectionLabels = {
   monthly_distribution: 'التوزيع الشهري',
 }
 
-const topicSectionLabels = {
-  tests: 'فرض',
-  exams: 'اختبار',
-}
-
-const termLabels = {
-  term1: 'الفصل الأول',
-  term2: 'الفصل الثاني',
-  term3: 'الفصل الثالث',
-}
-
 function getFileExtension(value = '') {
   const cleanValue = value.split('?')[0]
 
@@ -68,29 +55,6 @@ function getFileExtension(value = '') {
       .pop()
       ?.toUpperCase() || 'FILE'
   )
-}
-
-function makeTopicTitle(topicNumber, level, section, term) {
-  const formattedNumber = String(topicNumber).padStart(2, '0')
-
-  return (
-    `النموذج رقم ${formattedNumber} - ` +
-    `${topicSectionLabels[section]} ${termLabels[term]} ` +
-    `في علوم الطبيعة والحياة - ${titleLevelLabels[level]}`
-  )
-}
-
-function getTopicNumber(title = '') {
-  const match = title.match(/رقم\s*([0-9٠-٩]+)/)
-
-  if (!match) return 0
-
-  const westernDigits = match[1].replace(
-    /[٠-٩]/g,
-    digit => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)
-  )
-
-  return Number(westernDigits) || 0
 }
 
 function AdminFiles() {
@@ -109,34 +73,40 @@ function AdminFiles() {
   async function loadFiles() {
     setLoading(true)
 
-    const { data, error } = await supabase
-      .from('lessons')
-      .select('*')
-      .order('id', { ascending: false })
-
-    if (error) {
-      console.error(error)
-      alert('وقع خطأ أثناء جلب الملفات')
-    } else {
+    try {
+      const data = await getAdminLessons()
       setFiles(data || [])
-    }
+    } catch (err) {
+      console.error('LOAD ADMIN FILES ERROR:', err)
 
-    setLoading(false)
+      alert(
+        err.message ||
+          'وقع خطأ أثناء جلب الملفات من لوحة الإدارة'
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
   function extractLegacyStoragePath(fullUrl, bucketName) {
-    if (!fullUrl) return null
+    if (!fullUrl) {
+      return null
+    }
 
     const marker = `/${bucketName}/`
     const parts = fullUrl.split(marker)
 
-    if (parts.length < 2) return null
+    if (parts.length < 2) {
+      return null
+    }
 
     return parts[1]
   }
 
   function getR2Key(fileValue) {
-    if (!fileValue) return null
+    if (!fileValue) {
+      return null
+    }
 
     if (fileValue.startsWith('uploads/')) {
       return fileValue
@@ -171,7 +141,9 @@ function AdminFiles() {
   }
 
   function getPublicFileUrl(fileValue) {
-    if (!fileValue) return null
+    if (!fileValue) {
+      return null
+    }
 
     if (fileValue.startsWith('uploads/')) {
       const encodedKey = fileValue
@@ -191,11 +163,15 @@ function AdminFiles() {
     } = await supabase.auth.getSession()
 
     if (!session?.access_token) {
-      throw new Error('انتهت جلسة الإدارة. أعد تسجيل الدخول.')
+      throw new Error(
+        'انتهت جلسة الإدارة. أعد تسجيل الدخول.'
+      )
     }
 
     const response = await fetch(
-      `${R2_WORKER_URL}/admin-delete?key=${encodeURIComponent(key)}`,
+      `${R2_WORKER_URL}/admin-delete?key=${encodeURIComponent(
+        key
+      )}`,
       {
         method: 'DELETE',
         headers: {
@@ -204,11 +180,18 @@ function AdminFiles() {
       }
     )
 
-    const result = await response.json()
+    let result = null
+
+    try {
+      result = await response.json()
+    } catch {
+      result = null
+    }
 
     if (!response.ok) {
       throw new Error(
-        result.error || 'تعذر حذف الملف من التخزين.'
+        result?.error ||
+          'تعذر حذف الملف من التخزين.'
       )
     }
   }
@@ -222,7 +205,9 @@ function AdminFiles() {
       bucketName
     )
 
-    if (!path) return
+    if (!path) {
+      return
+    }
 
     const { error } = await supabase.storage
       .from(bucketName)
@@ -233,69 +218,6 @@ function AdminFiles() {
         `خطأ في حذف الملف من bucket ${bucketName}:`,
         error
       )
-    }
-  }
-
-  async function renumberTopics(level, section, term) {
-    const isTopic =
-      section === 'tests' || section === 'exams'
-
-    if (!isTopic || !level || !term) {
-      return
-    }
-
-    const { data: topicFiles, error: loadError } =
-      await supabase
-        .from('lessons')
-        .select('id, title, created_at')
-        .eq('level', level)
-        .eq('section', section)
-        .eq('term', term)
-
-    if (loadError) {
-      throw new Error(
-        `تعذر جلب ملفات المجموعة لإعادة الترقيم: ${loadError.message}`
-      )
-    }
-
-    const sortedTopics = [...(topicFiles || [])].sort((a, b) => {
-      const numberDifference =
-        getTopicNumber(a.title) - getTopicNumber(b.title)
-
-      if (numberDifference !== 0) {
-        return numberDifference
-      }
-
-      return (
-        new Date(a.created_at || 0) -
-        new Date(b.created_at || 0)
-      )
-    })
-
-    for (let index = 0; index < sortedTopics.length; index += 1) {
-      const topic = sortedTopics[index]
-
-      const newTitle = makeTopicTitle(
-        index + 1,
-        level,
-        section,
-        term
-      )
-
-      if (topic.title === newTitle) {
-        continue
-      }
-
-      const { error: updateError } = await supabase
-        .from('lessons')
-        .update({ title: newTitle })
-        .eq('id', topic.id)
-
-      if (updateError) {
-        throw new Error(
-          `تعذر إعادة ترقيم النموذج: ${updateError.message}`
-        )
-      }
     }
   }
 
@@ -312,7 +234,9 @@ function AdminFiles() {
       `هل تريد حذف الملف نهائيًا؟\n\n${file.title}${topicMessage}`
     )
 
-    if (!ok) return
+    if (!ok) {
+      return
+    }
 
     try {
       setDeletingId(file.id)
@@ -330,24 +254,7 @@ function AdminFiles() {
         await deleteLegacyStorageFile(file.ppt, 'ppts')
       }
 
-      const { error: deleteError } = await supabase
-        .from('lessons')
-        .delete()
-        .eq('id', file.id)
-
-      if (deleteError) {
-        throw new Error(
-          `تم حذف الملف من التخزين، لكن تعذر حذف سجله: ${deleteError.message}`
-        )
-      }
-
-      if (isTopic) {
-        await renumberTopics(
-          file.level,
-          file.section,
-          file.term
-        )
-      }
+      await deleteAdminLesson(file.id)
 
       await loadFiles()
 
@@ -375,7 +282,9 @@ function AdminFiles() {
       file.title
     )
 
-    if (newTitle === null) return
+    if (newTitle === null) {
+      return
+    }
 
     const cleanTitle = newTitle.trim()
 
@@ -384,19 +293,16 @@ function AdminFiles() {
       return
     }
 
-    if (cleanTitle === file.title) return
+    if (cleanTitle === file.title) {
+      return
+    }
 
     try {
       setEditingId(file.id)
 
-      const { error } = await supabase
-        .from('lessons')
-        .update({ title: cleanTitle })
-        .eq('id', file.id)
-
-      if (error) {
-        throw new Error(error.message)
-      }
+      await updateAdminLesson(file.id, {
+        title: cleanTitle,
+      })
 
       setFiles(prev =>
         prev.map(currentFile =>
@@ -540,7 +446,9 @@ function AdminFiles() {
         <select
           value={selectedSection}
           onWheel={preventSelectWheel}
-          onChange={e => setSelectedSection(e.target.value)}
+          onChange={e =>
+            setSelectedSection(e.target.value)
+          }
           style={{
             width: '100%',
             padding: '12px',

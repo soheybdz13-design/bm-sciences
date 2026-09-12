@@ -3,7 +3,10 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import AdminFiles from '../components/AdminFiles'
 import AdminUserUploads from '../components/AdminUserUploads'
-import { supabase } from '../lib/supabaseClient'
+import {
+  createAdminLesson,
+  getAdminLessons,
+} from '../api'
 import { uploadToR2 } from '../services/uploadToR2'
 
 const ARCHIVE_ACCEPT =
@@ -217,7 +220,10 @@ function getTitleFromFileName(fileName) {
 }
 
 function makeTopicTitle(topicNumber, level, section, term) {
-  const formattedNumber = String(topicNumber).padStart(2, '0')
+  const formattedNumber = String(topicNumber).padStart(
+    2,
+    '0'
+  )
 
   return (
     `النموذج رقم ${formattedNumber} - ` +
@@ -292,6 +298,20 @@ function Admin() {
 
   const currentConfig = sectionConfig[section]
 
+  async function getNextTopicNumber() {
+    const lessons = await getAdminLessons()
+
+    const matchingTopics = lessons.filter(lesson => {
+      return (
+        lesson.level === level &&
+        lesson.section === section &&
+        lesson.term === term
+      )
+    })
+
+    return matchingTopics.length + 1
+  }
+
   async function handleUploadAll() {
     if (!level || !section) {
       alert('اختر المستوى والقسم')
@@ -334,7 +354,9 @@ function Admin() {
         : `سيتم رفع ${files.length} ملفًا في قسم: ${currentConfig.label}.\n\nكل ملف سيُحفظ باسمه الأصلي. هل تريد المتابعة؟`
     )
 
-    if (!confirmed) return
+    if (!confirmed) {
+      return
+    }
 
     setLoading(true)
     setResults([])
@@ -346,6 +368,7 @@ function Admin() {
     })
 
     const uploadResults = []
+    let nextTopicNumber = null
 
     for (let index = 0; index < files.length; index += 1) {
       const file = files[index]
@@ -362,18 +385,12 @@ function Admin() {
         let lessonTitle = getTitleFromFileName(file.name)
 
         if (needsTerm) {
-          const { data: topicNumber, error: counterError } =
-            await supabase.rpc('next_topic_number', {
-              p_level: level,
-              p_section: section,
-              p_term: term,
-            })
-
-          if (counterError) {
-            throw new Error(
-              `تعذر الحصول على رقم النموذج التالي: ${counterError.message}`
-            )
+          if (nextTopicNumber === null) {
+            nextTopicNumber = await getNextTopicNumber()
           }
+
+          const topicNumber = nextTopicNumber
+          nextTopicNumber += 1
 
           lessonTitle = makeTopicTitle(
             topicNumber,
@@ -404,13 +421,7 @@ function Admin() {
           fileUrl
         )
 
-        const { error } = await supabase
-          .from('lessons')
-          .insert([lesson])
-
-        if (error) {
-          throw new Error(error.message)
-        }
+        await createAdminLesson(lesson)
 
         uploadResults.push({
           fileName: lessonTitle,

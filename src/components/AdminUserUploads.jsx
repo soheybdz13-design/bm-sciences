@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import {
+  createAdminLesson,
+  getAdminLessons,
+  getAdminUserUploads,
+  updateAdminUserUpload,
+} from '../api'
 
 const R2_WORKER_URL = 'https://upload.cem-sciences.com'
 
@@ -58,7 +64,10 @@ const pdfSections = [
 ]
 
 function makeTopicTitle(topicNumber, level, section, term) {
-  const formattedNumber = String(topicNumber).padStart(2, '0')
+  const formattedNumber = String(topicNumber).padStart(
+    2,
+    '0'
+  )
 
   return (
     `النموذج رقم ${formattedNumber} - ` +
@@ -72,7 +81,9 @@ function isArchiveFile(filePath) {
 }
 
 function isImageFile(filePath) {
-  return /\.(jpg|jpeg|png|webp|gif)$/i.test(filePath || '')
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(
+    filePath || ''
+  )
 }
 
 function isWordFile(filePath) {
@@ -99,20 +110,19 @@ function AdminUserUploads() {
   async function loadPending() {
     setLoading(true)
 
-    const { data, error } = await supabase
-      .from('user_uploads')
-      .select('*')
-      .eq('status', 'pending')
-      .order('id', { ascending: false })
-
-    if (error) {
-      console.error('ERROR loading user_uploads:', error)
-      alert('وقع خطأ أثناء جلب ملفات الزوار')
-    } else {
+    try {
+      const data = await getAdminUserUploads('pending')
       setItems(data || [])
-    }
+    } catch (err) {
+      console.error('ERROR loading user uploads:', err)
 
-    setLoading(false)
+      alert(
+        err.message ||
+          'وقع خطأ أثناء جلب ملفات الزوار'
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
   function isR2File(fileUrl) {
@@ -120,7 +130,9 @@ function AdminUserUploads() {
   }
 
   function getPublicUrl(fileUrl) {
-    if (!fileUrl) return null
+    if (!fileUrl) {
+      return null
+    }
 
     if (isR2File(fileUrl)) {
       const encodedPath = fileUrl
@@ -131,11 +143,7 @@ function AdminUserUploads() {
       return `${R2_WORKER_URL}/files/${encodedPath}`
     }
 
-    const { data } = supabase.storage
-      .from('user-files')
-      .getPublicUrl(fileUrl)
-
-    return data?.publicUrl || null
+    return fileUrl
   }
 
   async function notifyUser(type, item, reason = '') {
@@ -152,7 +160,9 @@ function AdminUserUploads() {
       } = await supabase.auth.getSession()
 
       if (!session?.access_token) {
-        throw new Error('انتهت جلسة الإدارة، أعد تسجيل الدخول')
+        throw new Error(
+          'انتهت جلسة الإدارة، أعد تسجيل الدخول'
+        )
       }
 
       const response = await fetch(
@@ -172,17 +182,25 @@ function AdminUserUploads() {
         }
       )
 
-      const result = await response.json()
+      let result = null
+
+      try {
+        result = await response.json()
+      } catch {
+        result = null
+      }
 
       if (!response.ok) {
         throw new Error(
-          result.error || 'تعذر إرسال البريد الإلكتروني'
+          result?.error ||
+            'تعذر إرسال البريد الإلكتروني'
         )
       }
 
       return {
         success: true,
-        message: result.message || 'تم إرسال البريد بنجاح',
+        message:
+          result?.message || 'تم إرسال البريد بنجاح',
       }
     } catch (err) {
       console.error('NOTIFY ERROR:', err)
@@ -231,14 +249,34 @@ function AdminUserUploads() {
     }
   }
 
+  async function getNextTopicNumber(item) {
+    const lessons = await getAdminLessons()
+
+    const matchingTopics = lessons.filter(lesson => {
+      return (
+        lesson.level === item.level &&
+        lesson.section === item.section &&
+        lesson.term === item.term
+      )
+    })
+
+    return matchingTopics.length + 1
+  }
+
   async function handleApprove(item) {
-    if (processingId) return
+    if (processingId) {
+      return
+    }
 
     const ok = window.confirm(
-      `هل تريد قبول هذا الملف وإضافته للموقع؟\n\nالعنوان: "${item.title}"\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}`
+      `هل تريد قبول هذا الملف وإضافته للموقع؟\n\nالعنوان: "${item.title}"\nالمرسل: ${
+        item.user_email || 'إيميل غير متوفر'
+      }`
     )
 
-    if (!ok) return
+    if (!ok) {
+      return
+    }
 
     try {
       setProcessingId(item.id)
@@ -258,33 +296,7 @@ function AdminUserUploads() {
           return
         }
 
-        const { data: topicNumber, error: counterError } =
-          await supabase.rpc('next_topic_number', {
-            p_level: item.level,
-            p_section: item.section,
-            p_term: item.term,
-          })
-
-        if (counterError) {
-          console.error(
-            'ERROR getting next topic number:',
-            counterError
-          )
-
-          alert(
-            `تعذر الحصول على رقم النموذج التالي: ${counterError.message}`
-          )
-          return
-        }
-
-        if (
-          topicNumber === null ||
-          topicNumber === undefined ||
-          Number(topicNumber) < 1
-        ) {
-          alert('تعذر إنشاء رقم نموذج صالح')
-          return
-        }
+        const topicNumber = await getNextTopicNumber(item)
 
         lessonTitle = makeTopicTitle(
           topicNumber,
@@ -298,7 +310,9 @@ function AdminUserUploads() {
           lessonTitle
         )
 
-        if (editedTitle === null) return
+        if (editedTitle === null) {
+          return
+        }
 
         if (!editedTitle.trim()) {
           alert('عنوان الملف لا يمكن أن يكون فارغًا')
@@ -327,42 +341,18 @@ function AdminUserUploads() {
         ppt: '',
         archive: '',
         youtube: item.youtube || null,
+        sender_email: item.user_email || null,
+        status: 'approved',
       }
 
       assignFileToLesson(lesson, item, filePath)
 
-      const { error: insertError } = await supabase
-        .from('lessons')
-        .insert([lesson])
+      await createAdminLesson(lesson)
 
-      if (insertError) {
-        console.error('ERROR inserting lesson:', insertError)
-
-        alert(
-          `وقع خطأ أثناء إضافة الملف للدروس: ${insertError.message}`
-        )
-        return
-      }
-
-      const { error: updateError } = await supabase
-        .from('user_uploads')
-        .update({
-          status: 'approved',
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', item.id)
-
-      if (updateError) {
-        console.error(
-          'ERROR updating user upload status:',
-          updateError
-        )
-
-        alert(
-          'تمت إضافة الملف للدروس، لكن لم يتم تحديث حالة الطلب'
-        )
-        return
-      }
+      await updateAdminUserUpload(item.id, {
+        status: 'approved',
+        reject_reason: null,
+      })
 
       const notification = await notifyUser(
         'approved',
@@ -373,23 +363,32 @@ function AdminUserUploads() {
       )
 
       setItems(prev =>
-        prev.filter(pendingItem => pendingItem.id !== item.id)
+        prev.filter(
+          pendingItem => pendingItem.id !== item.id
+        )
       )
 
       if (notification.success) {
         alert(
-          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}\nتم إرسال إشعار القبول إلى الزائر ✅`
+          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nالمرسل: ${
+            item.user_email || 'إيميل غير متوفر'
+          }\nتم إرسال إشعار القبول إلى الزائر ✅`
         )
       } else {
         alert(
-          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}\nلكن تعذر إرسال الإيميل: ${notification.message}`
+          `تم قبول الملف بنجاح باسم:\n${lessonTitle}\n\nالمرسل: ${
+            item.user_email || 'إيميل غير متوفر'
+          }\nلكن تعذر إرسال الإيميل: ${
+            notification.message
+          }`
         )
       }
     } catch (err) {
       console.error('APPROVE ERROR:', err)
 
       alert(
-        err.message || 'وقع خطأ غير متوقع أثناء قبول الملف'
+        err.message ||
+          'وقع خطأ غير متوقع أثناء قبول الملف'
       )
     } finally {
       setProcessingId(null)
@@ -397,13 +396,19 @@ function AdminUserUploads() {
   }
 
   async function handleReject(item) {
-    if (processingId) return
+    if (processingId) {
+      return
+    }
 
     const ok = window.confirm(
-      `هل تريد رفض هذا الملف؟\n\nالعنوان: "${item.title}"\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}`
+      `هل تريد رفض هذا الملف؟\n\nالعنوان: "${item.title}"\nالمرسل: ${
+        item.user_email || 'إيميل غير متوفر'
+      }`
     )
 
-    if (!ok) return
+    if (!ok) {
+      return
+    }
 
     const reason = window.prompt(
       'اكتب سبب الرفض (اختياري):',
@@ -413,32 +418,10 @@ function AdminUserUploads() {
     try {
       setProcessingId(item.id)
 
-      if (item.file_url && !isR2File(item.file_url)) {
-        const { error: removeError } = await supabase.storage
-          .from('user-files')
-          .remove([item.file_url])
-
-        if (removeError) {
-          console.error(
-            'ERROR removing rejected file:',
-            removeError
-          )
-        }
-      }
-
-      const { error: updateError } = await supabase
-        .from('user_uploads')
-        .update({
-          status: 'rejected',
-          reject_reason: reason || null,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', item.id)
-
-      if (updateError) {
-        alert('وقع خطأ أثناء تحديث حالة الطلب')
-        return
-      }
+      await updateAdminUserUpload(item.id, {
+        status: 'rejected',
+        reject_reason: reason || null,
+      })
 
       const notification = await notifyUser(
         'rejected',
@@ -447,21 +430,33 @@ function AdminUserUploads() {
       )
 
       setItems(prev =>
-        prev.filter(pendingItem => pendingItem.id !== item.id)
+        prev.filter(
+          pendingItem => pendingItem.id !== item.id
+        )
       )
 
       if (notification.success) {
         alert(
-          `تم رفض الملف وحفظ سبب الرفض.\n\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}\nتم إرسال إشعار الرفض إلى الزائر ✅`
+          `تم رفض الملف وحفظ سبب الرفض.\n\nالمرسل: ${
+            item.user_email || 'إيميل غير متوفر'
+          }\nتم إرسال إشعار الرفض إلى الزائر ✅`
         )
       } else {
         alert(
-          `تم رفض الملف وحفظ سبب الرفض.\n\nالمرسل: ${item.user_email || 'إيميل غير متوفر'}\nلكن تعذر إرسال الإيميل: ${notification.message}`
+          `تم رفض الملف وحفظ سبب الرفض.\n\nالمرسل: ${
+            item.user_email || 'إيميل غير متوفر'
+          }\nلكن تعذر إرسال الإيميل: ${
+            notification.message
+          }`
         )
       }
     } catch (err) {
       console.error('REJECT ERROR:', err)
-      alert('وقع خطأ غير متوقع أثناء رفض الملف')
+
+      alert(
+        err.message ||
+          'وقع خطأ غير متوقع أثناء رفض الملف'
+      )
     } finally {
       setProcessingId(null)
     }
@@ -538,7 +533,8 @@ function AdminUserUploads() {
                         wordBreak: 'break-word',
                       }}
                     >
-                      {item.user_email || 'إيميل غير متوفر'}
+                      {item.user_email ||
+                        'إيميل غير متوفر'}
                     </td>
 
                     <td>
@@ -586,7 +582,8 @@ function AdminUserUploads() {
                       <button
                         type="button"
                         disabled={
-                          isProcessing || processingId !== null
+                          isProcessing ||
+                          processingId !== null
                         }
                         style={{
                           background: '#1b5e20',
@@ -616,7 +613,8 @@ function AdminUserUploads() {
                       <button
                         type="button"
                         disabled={
-                          isProcessing || processingId !== null
+                          isProcessing ||
+                          processingId !== null
                         }
                         style={{
                           background: '#c62828',

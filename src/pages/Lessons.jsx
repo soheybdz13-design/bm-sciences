@@ -11,7 +11,8 @@ import {
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import PdfViewer from '../components/PdfViewer'
-import { supabase } from '../lib/supabaseClient'
+import { getLessonsByLevel } from '../api'
+import { getFileUrl } from '../utils/fileUrl'
 
 import './Lessons.css'
 
@@ -31,20 +32,20 @@ function Lessons() {
     setLoading(true)
 
     try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('level', level)
-        .order('year', { ascending: false })
-        .order('id', { ascending: false })
+      const data = await getLessonsByLevel(level)
 
-      if (error) {
-        console.error(error)
-        setLessons([])
-        return
-      }
+      const sortedLessons = [...(data || [])].sort((a, b) => {
+        const yearA = Number(a.year) || 0
+        const yearB = Number(b.year) || 0
 
-      setLessons(data || [])
+        if (yearA !== yearB) {
+          return yearB - yearA
+        }
+
+        return Number(b.id) - Number(a.id)
+      })
+
+      setLessons(sortedLessons)
     } catch (error) {
       console.error(error)
       setLessons([])
@@ -70,6 +71,7 @@ function Lessons() {
 
         <div className="search-box">
           <FaSearch className="search-icon" />
+
           <input
             type="text"
             placeholder="ابحث عن ملف..."
@@ -82,53 +84,64 @@ function Lessons() {
           <div className="loading">جاري تحميل الملفات...</div>
         ) : filteredLessons.length === 0 ? (
           <div className="loading">
-            فهرس الملفات في صيانة تقنية مؤقتة. الملفات محفوظة وآمنة وستعود
-            قريبًا.
+            لا توجد ملفات مطابقة للبحث.
           </div>
         ) : (
           <div className="files-list">
-            {filteredLessons.map(lesson => (
-              <div key={lesson.id} className="file-row">
-                <div className="file-year">
-                  <FaCalendarAlt />
-                  {lesson.year}
+            {filteredLessons.map(lesson => {
+              const pdfUrl = getFileUrl(lesson.pdf)
+
+              return (
+                <div key={lesson.id} className="file-row">
+                  <div className="file-year">
+                    <FaCalendarAlt />
+                    {lesson.year || '—'}
+                  </div>
+
+                  <div className="file-info">
+                    <h3>
+                      <FaFilePdf
+                        style={{
+                          color: '#e53935',
+                          marginLeft: '8px',
+                        }}
+                      />
+                      {lesson.title}
+                    </h3>
+
+                    {lesson.subject && <p>{lesson.subject}</p>}
+                  </div>
+
+                  <div className="file-actions">
+                    {pdfUrl ? (
+                      <>
+                        <button
+                          className="preview-btn"
+                          onClick={() => setSelectedPdf(pdfUrl)}
+                        >
+                          <FaEye />
+                          معاينة PDF
+                        </button>
+
+                        <a
+                          href={pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="download-btn"
+                        >
+                          <FaDownload />
+                          فتح الملف / تحميل
+                        </a>
+                      </>
+                    ) : (
+                      <span className="download-btn">
+                        لا يوجد PDF
+                      </span>
+                    )}
+                  </div>
                 </div>
-
-                <div className="file-info">
-                  <h3>
-                    <FaFilePdf
-                      style={{
-                        color: '#e53935',
-                        marginLeft: '8px',
-                      }}
-                    />
-                    {lesson.title}
-                  </h3>
-
-                  {lesson.subject && <p>{lesson.subject}</p>}
-                </div>
-
-                <div className="file-actions">
-                  <button
-                    className="preview-btn"
-                    onClick={() => setSelectedPdf(lesson.pdf)}
-                  >
-                    <FaEye />
-                    معاينة PDF
-                  </button>
-
-                  <a
-                    href={lesson.pdf}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="download-btn"
-                  >
-                    <FaDownload />
-                    فتح الملف / تحميل
-                  </a>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
